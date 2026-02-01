@@ -49,7 +49,19 @@ terraform init && terraform apply
 ### GCP Quick Start
 
 1. Select or create a GCP project (Do NOT use a project with production resources!)
-2. Enable the required APIs and set up authentication
+2. Set up authentication and enable the Service Usage API (required for Terraform to enable other APIs):
+   ```bash
+   # Authenticate with GCP
+   gcloud auth login
+   gcloud auth application-default login
+
+   # Set your project
+   export PROJECT_ID="your-test-project-id"
+   gcloud config set project $PROJECT_ID
+
+   # Enable Service Usage API (Terraform will enable the rest automatically)
+   gcloud services enable serviceusage.googleapis.com --project $PROJECT_ID
+   ```
 3. Deploy:
    ```bash
    cd gcp
@@ -58,6 +70,8 @@ terraform init && terraform apply
    terraform init
    terraform apply
    ```
+
+**Note:** Terraform automatically enables these APIs: IAM, Cloud Resource Manager, Compute, Cloud Functions, Cloud Build, Cloud Run, Storage, and Secret Manager.
 
 # IAM Vulnerable's big brother - CloudFoxable
 
@@ -179,13 +193,15 @@ See [gcp/README.md](gcp/) for detailed GCP documentation.
 
 ## GCP Cost
 
-| Module | Default | Cost | Required For |
-|--------|---------|------|--------------|
-| privesc-paths | Enabled | **Free** | All IAM paths |
-| tool-testing | Enabled | **Free** | Tool validation |
-| Compute | Disabled | ~$5/mo | setMetadata, osLogin |
-| Cloud Functions | Disabled | Free tier | updateFunction |
-| Cloud Run | Disabled | Free tier | actAs-cloudrun |
+| Module | Default | Cost/Hour | Cost/Month | Required For |
+|--------|---------|-----------|------------|--------------|
+| privesc-paths (31) | Enabled | **$0** | **Free** | All IAM paths |
+| tool-testing | Enabled | **$0** | **Free** | Tool validation |
+| Compute | Disabled | ~$0.002 | ~$2-3 | setMetadata, osLogin |
+| Cloud Functions | Disabled | $0 | Free tier | updateFunction |
+| Cloud Run | Disabled | $0 | Free tier | actAs-cloudrun |
+
+**Default deployment: $0** (IAM resources only)
 
 # Tool Testing
 

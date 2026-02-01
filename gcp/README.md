@@ -13,16 +13,34 @@ Intentionally vulnerable GCP IAM configurations for learning privilege escalatio
 
 ```bash
 # Authenticate with GCP
+gcloud auth login
 gcloud auth application-default login
+
+# Set your project
+export PROJECT_ID="your-test-project-id"
+gcloud config set project $PROJECT_ID
+
+# Enable Service Usage API (required for Terraform to enable other APIs)
+gcloud services enable serviceusage.googleapis.com --project $PROJECT_ID
 
 # Configure your project
 cp terraform.tfvars.example terraform.tfvars
-# Edit terraform.tfvars and set gcp_project_id
+# Edit terraform.tfvars and set gcp_project_id to your project ID
 
 # Deploy
 terraform init
 terraform apply
 ```
+
+**APIs enabled automatically by Terraform:**
+- `iam.googleapis.com` - IAM API
+- `cloudresourcemanager.googleapis.com` - Resource Manager API
+- `compute.googleapis.com` - Compute Engine API
+- `cloudfunctions.googleapis.com` - Cloud Functions API
+- `cloudbuild.googleapis.com` - Cloud Build API
+- `run.googleapis.com` - Cloud Run API
+- `storage.googleapis.com` - Cloud Storage API
+- `secretmanager.googleapis.com` - Secret Manager API
 
 ## Configuration
 
@@ -87,11 +105,24 @@ gcp_region = "us-central1"
 
 Uncomment in `main.tf` to enable:
 
-| Module | Cost | Description |
-|--------|------|-------------|
-| compute | ~$5/mo | VM with privileged SA for setMetadata/osLogin testing |
-| cloud-functions | Free tier | Function with privileged SA |
-| cloud-run | Free tier | Service with privileged SA |
+| Module | Cost/Hour | Cost/Month | Description |
+|--------|-----------|------------|-------------|
+| compute | ~$0.002 | ~$2-3 | VM (preemptible) with privileged SA |
+| cloud-functions | $0 | Free tier | Function with privileged SA |
+| cloud-run | $0 | Free tier | Service with privileged SA |
+
+## Cost Summary
+
+| Configuration | Cost/Hour | Cost/Month |
+|---------------|-----------|------------|
+| **Default (31 IAM paths only)** | **$0.00** | **$0** |
+| + Compute module (preemptible) | +$0.002 | +$2-3 |
+| + Compute module (standard) | +$0.008 | +$6-7 |
+| + Cloud Functions (idle) | +$0.00 | Free tier |
+| + Cloud Run (idle) | +$0.00 | Free tier |
+| **All modules enabled** | ~$0.01 | ~$5-10 |
+
+**Note:** The default deployment creates only IAM resources (service accounts, custom roles, IAM bindings) which are **completely free**. Non-free modules must be explicitly enabled.
 
 ## Testing with FoxMapper
 
