@@ -27,9 +27,9 @@ gcloud services enable serviceusage.googleapis.com --project $PROJECT_ID
 cp terraform.tfvars.example terraform.tfvars
 # Edit terraform.tfvars and set gcp_project_id to your project ID
 
-# Deploy
+# Deploy (use -parallelism=2 to avoid GCP rate limits on service account creation)
 terraform init
-terraform apply
+terraform apply -parallelism=2
 ```
 
 **APIs enabled automatically by Terraform:**
@@ -55,7 +55,140 @@ gcp_region = "us-central1"
 
 # Optional: Attacker identity (defaults to current user)
 # attacker_member = "user:attacker@example.com"
+
+# Optional: Create the project if it doesn't exist (requires billing account)
+# create_project  = true
+# billing_account = "XXXXXX-XXXXXX-XXXXXX"
+
+# Optional: Organization ID for org-level privesc paths
+# Note: Orgs can't be created via Terraform - requires Google Workspace/Cloud Identity
+# gcp_organization_id = "123456789012"
 ```
+
+### Optional: Auto-Create Project
+
+If you don't have an existing project, Terraform can create one for you:
+
+1. **Get your billing account ID:**
+   ```bash
+   gcloud billing accounts list
+   ```
+
+2. **Configure terraform.tfvars:**
+   ```hcl
+   gcp_project_id = "my-iam-vulnerable-test"  # Must be globally unique
+   create_project = true
+   billing_account = "XXXXXX-XXXXXX-XXXXXX"
+
+   # Optional: Create under an organization (otherwise creates standalone project)
+   # gcp_organization_id = "123456789012"
+   ```
+
+3. **Deploy:**
+   ```bash
+   terraform apply -parallelism=2
+   ```
+
+**Notes:**
+- Project IDs must be globally unique across all of GCP
+- A billing account is required even for free-tier resources (to enable APIs)
+- Without an organization, the project is created as a "no organization" standalone project
+
+### Optional: Setting Up a GCP Organization with Cloud Identity Free
+
+> **Note:** A GCP Organization is **not required** for most privilege escalation paths in this project. Only org-level paths like `orgpolicy.policy.set` (privesc42) require an organization to fully exploit. Skip this section if you just want to test project-level privesc.
+
+GCP Organizations cannot be created directly - they're automatically provisioned when you verify domain ownership through Google Workspace or Cloud Identity. Here's how to set one up for free using Cloud Identity Free:
+
+#### Prerequisites
+
+- A domain you own (e.g., `yourdomain.com`)
+- Access to your domain's DNS settings
+- A Google account
+
+#### Step 1: Sign Up for Cloud Identity Free
+
+1. Go to [Cloud Identity Free signup](https://workspace.google.com/signup/gcpidentity/welcome)
+2. Click **Get Started**
+3. Enter your business name (can be anything for testing)
+4. Select **Just you** for number of employees
+5. Enter your contact information
+6. Enter your domain name (e.g., `yourdomain.com`)
+
+#### Step 2: Verify Domain Ownership
+
+Google will ask you to verify you own the domain. Choose one method:
+
+**Option A: TXT Record (Recommended)**
+1. Copy the TXT verification record Google provides
+2. Add it to your domain's DNS settings:
+   ```
+   Type: TXT
+   Host: @ (or leave blank)
+   Value: google-site-verification=XXXXXXXXXXXXX
+   ```
+3. Wait 5-15 minutes for DNS propagation
+4. Click **Verify** in the Cloud Identity setup
+
+**Option B: CNAME Record**
+1. Add the CNAME record Google provides to your DNS
+2. Wait for propagation and verify
+
+#### Step 3: Complete Setup
+
+1. Create your admin account (e.g., `admin@yourdomain.com`)
+2. Set a password
+3. Skip optional setup steps (you can configure later)
+4. Accept the terms of service
+
+#### Step 4: Get Your Organization ID
+
+Once setup completes, a GCP Organization is automatically created:
+
+```bash
+# List organizations you have access to
+gcloud organizations list
+
+# Output:
+# DISPLAY_NAME     ID              DIRECTORY_CUSTOMER_ID
+# yourdomain.com   123456789012    C0xxxxxxx
+```
+
+#### Step 5: Configure Terraform
+
+Add your organization ID to `terraform.tfvars`:
+
+```hcl
+gcp_organization_id = "123456789012"
+```
+
+#### Step 6: Grant Organization-Level Permissions
+
+For org-level privesc paths to work, grant yourself Organization Admin:
+
+```bash
+# Get your organization ID
+ORG_ID=$(gcloud organizations list --format='value(ID)' --limit=1)
+
+# Grant yourself Organization Administrator
+gcloud organizations add-iam-policy-binding $ORG_ID \
+  --member="user:your-email@gmail.com" \
+  --role="roles/resourcemanager.organizationAdmin"
+```
+
+#### Cloud Identity Free Limits
+
+- Up to 50 users (plenty for testing)
+- No cost for the identity service
+- Full GCP Organization functionality
+- No Google Workspace apps (Gmail, Docs, etc.) - just identity management
+
+#### Cleanup
+
+To delete the organization later:
+1. Go to [Google Admin Console](https://admin.google.com)
+2. Account > Account settings > Delete account
+3. This removes the organization and all associated resources
 
 ## What Gets Created
 
@@ -63,110 +196,124 @@ gcp_region = "us-central1"
 
 **43 Privilege Escalation Scenarios** grouped by GCP service:
 
-| # | Scenario | Permission(s) | Cost |
-|---|----------|---------------|------|
-| **IAM Service Account** | | | |
-| 1 | setIamPolicy-project | `resourcemanager.projects.setIamPolicy` | Free |
-| 2 | createServiceAccountKey | `iam.serviceAccountKeys.create` | Free |
-| 3 | setIamPolicy-serviceAccount | `iam.serviceAccounts.setIamPolicy` | Free |
-| 4 | getAccessToken | `iam.serviceAccounts.getAccessToken` | Free |
-| 5 | signBlob | `iam.serviceAccounts.signBlob` | Free |
-| 6 | signJwt | `iam.serviceAccounts.signJwt` | Free |
-| 7 | implicitDelegation | `iam.serviceAccounts.implicitDelegation` | Free |
-| 8 | getOpenIdToken | `iam.serviceAccounts.getOpenIdToken` | Free |
-| 9 | updateRole | `iam.roles.update` | Free |
-| **Compute Engine** | | | |
-| 10 | actAs-compute | `actAs` + `compute.instances.create` | ~$0.01/hr |
-| 11 | setMetadata-compute | `compute.instances.setMetadata` | Free |
-| 12 | osLogin | `compute.instances.osAdminLogin` | Free |
-| 13 | setServiceAccount | `compute.instances.setServiceAccount` | Free |
-| 14 | instanceTemplates.create | `compute.instanceTemplates.create` | ~$0.01/hr |
-| **Cloud Functions** | | | |
-| 15 | actAs-cloudfunction | `actAs` + `cloudfunctions.functions.create` | Free tier |
-| 16 | updateFunction | `cloudfunctions.functions.update` | Free tier |
-| 17 | sourceCodeSet | `cloudfunctions.functions.sourceCodeSet` | Free |
-| **Cloud Run** | | | |
-| 18 | actAs-cloudrun | `actAs` + `run.services.create` | Free tier |
-| 19 | run.services.update | `run.services.update` | Free |
-| 20 | run.jobs.create | `run.jobs.create` + `actAs` | Free tier |
-| **Cloud Build** | | | |
-| 21 | actAs-cloudbuild | `actAs` + `cloudbuild.builds.create` | Free tier |
-| 22 | cloudbuild.triggers.create | `cloudbuild.builds.create` via trigger | Free |
-| **Storage** | | | |
-| 23 | setIamPolicy-bucket | `storage.buckets.setIamPolicy` | Free |
-| 24 | storage.objects.create | Write to sensitive bucket | Free |
-| **Secret Manager** | | | |
-| 25 | secretManager | `secretmanager.versions.access` | Free |
-| 26 | secretManager.setIamPolicy | `secretmanager.secrets.setIamPolicy` | Free |
-| **Pub/Sub** | | | |
-| 27 | setIamPolicy-pubsub | `pubsub.topics.setIamPolicy` | Free |
-| **Cloud Scheduler** | | | |
-| 28 | cloudScheduler | `cloudscheduler.jobs.create` | Free tier |
-| **Deployment Manager** | | | |
-| 29 | deploymentManager | `deploymentmanager.deployments.create` | Free |
-| **Composer** | | | |
-| 30 | composer | `composer.environments.create` | ~$300/mo |
-| **Dataflow** | | | |
-| 31 | dataflow | `dataflow.jobs.create` | ~$0.05/hr |
-| **Dataproc** | | | |
-| 32 | dataproc.clusters.create | `dataproc.clusters.create` + `actAs` | ~$0.10/hr |
-| 33 | dataproc.jobs.create | `dataproc.jobs.create` | Free |
-| **GKE/Kubernetes** | | | |
-| 34 | container.clusters.create | `container.clusters.create` + `actAs` | ~$70/mo |
-| 35 | container.clusters.getCredentials | Access GKE cluster | Free |
-| **Vertex AI / AI Platform** | | | |
-| 36 | notebooks.instances.create | `notebooks.instances.create` + `actAs` | ~$25/mo |
-| 37 | aiplatform.customJobs.create | `aiplatform.customJobs.create` | Varies |
-| **Cloud Workflows** | | | |
-| 38 | workflows.workflows.create | `workflows.workflows.create` + `actAs` | Free tier |
-| **Eventarc** | | | |
-| 39 | eventarc.triggers.create | `eventarc.triggers.create` | Free |
-| **BigQuery** | | | |
-| 40 | bigquery.datasets.setIamPolicy | `bigquery.datasets.setIamPolicy` | Free |
-| **Workload Identity** | | | |
-| 41 | workloadIdentityPoolProviders | Federation abuse | Free |
-| **Org Policy** | | | |
-| 42 | orgpolicy.policy.set | `orgpolicy.policy.set` | Free |
-| **Deny Bypass** | | | |
-| 43 | explicitDeny-bypass | SA chaining | Free |
+| # | Scenario | Permission(s) | Exploit Cost | Status |
+|---|----------|---------------|--------------|--------|
+| **IAM Service Account** | | | | |
+| 1 | setIamPolicy-project | `resourcemanager.projects.setIamPolicy` | Free | Enabled |
+| 2 | createServiceAccountKey | `iam.serviceAccountKeys.create` | Free | Enabled |
+| 3 | setIamPolicy-serviceAccount | `iam.serviceAccounts.setIamPolicy` | Free | Enabled |
+| 4 | getAccessToken | `iam.serviceAccounts.getAccessToken` | Free | Enabled |
+| 5 | signBlob | `iam.serviceAccounts.signBlob` | Free | Enabled |
+| 6 | signJwt | `iam.serviceAccounts.signJwt` | Free | Enabled |
+| 7 | implicitDelegation | `iam.serviceAccounts.implicitDelegation` | Free | Enabled |
+| 8 | getOpenIdToken | `iam.serviceAccounts.getOpenIdToken` | Free | Enabled |
+| 9 | updateRole | `iam.roles.update` | Free | Enabled |
+| **Compute Engine** | | | | |
+| 10 | actAs-compute | `actAs` + `compute.instances.create` | ~$0.01/hr | Enabled |
+| 11 | setMetadata-compute | `compute.instances.setMetadata` | ~$2-5/mo | Disabled |
+| 12 | osLogin | `compute.instances.osAdminLogin` | ~$2-5/mo | Disabled |
+| 13 | setServiceAccount | `compute.instances.setServiceAccount` | ~$2-5/mo | Disabled |
+| 14 | instanceTemplates.create | `compute.instanceTemplates.create` | ~$0.01/hr | Enabled |
+| **Cloud Functions** | | | | |
+| 15 | actAs-cloudfunction | `actAs` + `cloudfunctions.functions.create` | Free tier | Enabled |
+| 16 | updateFunction | `cloudfunctions.functions.update` | Free | Disabled |
+| 17 | sourceCodeSet | `cloudfunctions.functions.sourceCodeSet` | Free | Disabled |
+| **Cloud Run** | | | | |
+| 18 | actAs-cloudrun | `actAs` + `run.services.create` | Free tier | Enabled |
+| 19 | run.services.update | `run.services.update` | Free | Disabled |
+| 20 | run.jobs.create | `run.jobs.create` + `actAs` | Free tier | Enabled |
+| **Cloud Build** | | | | |
+| 21 | actAs-cloudbuild | `actAs` + `cloudbuild.builds.create` | Free tier | Enabled |
+| 22 | cloudbuild.triggers.create | `cloudbuild.builds.create` via trigger | Free | Enabled |
+| **Storage** | | | | |
+| 23 | setIamPolicy-bucket | `storage.buckets.setIamPolicy` | Free | Enabled |
+| 24 | storage.objects.create | Write to sensitive bucket | Free | Enabled |
+| **Secret Manager** | | | | |
+| 25 | secretManager | `secretmanager.versions.access` | Free | Enabled |
+| 26 | secretManager.setIamPolicy | `secretmanager.secrets.setIamPolicy` | Free | Enabled |
+| **Pub/Sub** | | | | |
+| 27 | setIamPolicy-pubsub | `pubsub.topics.setIamPolicy` | Free | Enabled |
+| **Cloud Scheduler** | | | | |
+| 28 | cloudScheduler | `cloudscheduler.jobs.create` | Free tier | Enabled |
+| **Deployment Manager** | | | | |
+| 29 | deploymentManager | `deploymentmanager.deployments.create` | Free | Enabled |
+| **Composer** | | | | |
+| 30 | composer | `composer.environments.create` | ~$300/mo | Enabled |
+| **Dataflow** | | | | |
+| 31 | dataflow | `dataflow.jobs.create` | ~$0.05/hr | Enabled |
+| **Dataproc** | | | | |
+| 32 | dataproc.clusters.create | `dataproc.clusters.create` + `actAs` | ~$0.10/hr | Enabled |
+| 33 | dataproc.jobs.create | `dataproc.jobs.create` | Free | Enabled |
+| **GKE/Kubernetes** | | | | |
+| 34 | container.clusters.create | `container.clusters.create` + `actAs` | ~$70/mo | Enabled |
+| 35 | container.clusters.getCredentials | Access GKE cluster | Free | Enabled |
+| **Vertex AI / AI Platform** | | | | |
+| 36 | notebooks.instances.create | `notebooks.instances.create` + `actAs` | ~$25/mo | Enabled |
+| 37 | aiplatform.customJobs.create | `aiplatform.customJobs.create` | Varies | Enabled |
+| **Cloud Workflows** | | | | |
+| 38 | workflows.workflows.create | `workflows.workflows.create` + `actAs` | Free tier | Enabled |
+| **Eventarc** | | | | |
+| 39 | eventarc.triggers.create | `eventarc.triggers.create` | Free | Enabled |
+| **BigQuery** | | | | |
+| 40 | bigquery.datasets.setIamPolicy | `bigquery.datasets.setIamPolicy` | Free | Enabled |
+| **Workload Identity** | | | | |
+| 41 | workloadIdentityPoolProviders | Federation abuse | Free | Enabled |
+| **Org Policy** | | | | |
+| 42 | orgpolicy.policy.set | `orgpolicy.policy.set` | Free | Disabled |
+| **Deny Bypass** | | | | |
+| 43 | explicitDeny-bypass | SA chaining | Free | Enabled |
 
-> **Note:** "Free" means only IAM resources are created (no cost). Exploitation of some paths may require creating actual resources which incur costs.
+> **Status Legend:**
+> - **Enabled** = IAM resources created by default, exploitable immediately
+> - **Disabled** = Requires opt-in variable (see below)
+>
+> **Disabled Paths - Enable individually:**
+> | Path | Variable | Creates | Cost |
+> |------|----------|---------|------|
+> | 11 | `enable_privesc11 = true` | VM + IAM | ~$2-5/mo |
+> | 12 | `enable_privesc12 = true` | VM + IAM | ~$2-5/mo |
+> | 13 | `enable_privesc13 = true` | VM + IAM | ~$2-5/mo |
+> | 16 | `enable_privesc16 = true` | Function + IAM | Free (idle) |
+> | 17 | `enable_privesc17 = true` | Function + IAM | Free (idle) |
+> | 19 | `enable_privesc19 = true` | Cloud Run + IAM | Free (idle) |
+> | 42 | `enable_privesc42 = true` | IAM only | Free (requires `gcp_organization_id`) |
+>
+> **Note:** "Exploit Cost" is what it costs to actually exploit the path. "Enabled" paths create only IAM resources (free) but exploitation may create billable resources (e.g., privesc10 creates a VM when exploited).
 
 **Tool Testing Resources:**
 - False Negative tests (should be detected)
 - False Positive tests (should not be flagged)
 
-### Non-Free Resources (Optional)
+### Disabled Privesc Paths (Optional)
 
-Enable via variables in `terraform.tfvars`:
+Some privesc paths are disabled by default because they require target infrastructure (costs money) or a GCP Organization. Enable individually in `terraform.tfvars`:
 
-| Module | Variable | Cost/Hour | Cost/Month | Description |
-|--------|----------|-----------|------------|-------------|
-| compute | `enable_compute = true` | ~$0.002 | ~$2-3 | VM with privileged SA |
-| cloud-functions | `enable_cloud_functions = true` | $0 | Free tier | Function with privileged SA |
-| cloud-run | `enable_cloud_run = true` | $0 | Free tier | Service with privileged SA |
-
-**Example - Enable specific modules in `terraform.tfvars`:**
 ```hcl
 gcp_project_id = "your-test-project-id"
 
-# Enable only compute module
-enable_compute = true
-```
+# Compute-based paths (creates VM, ~$2-5/mo)
+enable_privesc11 = true  # setMetadata-compute
+enable_privesc12 = true  # osLogin
+enable_privesc13 = true  # setServiceAccount
 
-**Example - Enable all optional modules:**
-```hcl
-gcp_project_id = "your-test-project-id"
+# Cloud Functions paths (creates function, free when idle)
+enable_privesc16 = true  # updateFunction
+enable_privesc17 = true  # sourceCodeSet
 
-# Enable all non-free modules
-enable_compute         = true
-enable_cloud_functions = true
-enable_cloud_run       = true
+# Cloud Run paths (creates service, free when idle)
+enable_privesc19 = true  # run.services.update
+
+# Organization paths (requires gcp_organization_id)
+# gcp_organization_id = "123456789012"
+# enable_privesc42 = true  # orgpolicy.policy.set
 ```
 
 **Or via command line:**
 ```bash
-terraform apply -var="enable_compute=true" -var="enable_cloud_functions=true" -var="enable_cloud_run=true" -var="gcp_project_id=iam-vulnerable-test"
+terraform apply -parallelism=2 -var="enable_privesc11=true" -var="enable_privesc12=true" -var="gcp_project_id=iam-vulnerable"
+
+# With organization (for privesc42)
+terraform apply -parallelism=2 -var="gcp_project_id=iam-vulnerable" -var="gcp_organization_id=123456789012" -var="enable_privesc42=true"
 ```
 
 ## Cost Summary
@@ -197,6 +344,47 @@ foxmapper gcp argquery --preset privesc --project YOUR_PROJECT_ID --paths 3
 # List all admins
 foxmapper gcp argquery --preset admin --project YOUR_PROJECT_ID
 ```
+
+## Troubleshooting
+
+### Rate Limit Errors (429 - Service Accounts per Minute)
+
+GCP limits service account creation to ~5-10 per minute per project. **Always use `-parallelism=2`** to avoid hitting this limit:
+
+```bash
+# Recommended for all runs
+terraform apply -parallelism=2
+
+# Or for very strict rate limiting, use parallelism=1
+terraform apply -parallelism=1
+```
+
+The Terraform configuration includes batched delays, but on retries after errors the delays have already completed and pending resources try to create at once. Using `-parallelism=2` prevents this.
+
+### Cloud Functions Build Errors
+
+If you see errors about bucket access being denied for the compute service account:
+
+```
+Access to bucket gcf-sources-XXXXX denied. You must grant Storage Object Viewer permission
+```
+
+This is usually an IAM propagation delay. The fix has been applied (90s wait), but if it still fails:
+
+```bash
+# Wait a minute, then re-apply
+sleep 60 && terraform apply -parallelism=2
+```
+
+### Organization Policy Errors
+
+The `orgpolicy.policy.set` permission cannot be used in custom roles - this is a GCP limitation. The privesc42 path uses the predefined `roles/orgpolicy.policyAdmin` role instead.
+
+**Note:** Actually modifying organization policies requires:
+1. A GCP Organization (tied to a verified domain via Google Workspace or Cloud Identity)
+2. The role granted at the organization level, not just project level
+
+Set the optional `gcp_organization_id` variable if you have an org and want full functionality.
 
 ## Cleanup
 

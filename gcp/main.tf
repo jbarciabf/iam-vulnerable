@@ -21,9 +21,42 @@ provider "google" {
   region  = var.gcp_region
 }
 
+# =============================================================================
+# PROJECT CREATION (Optional)
+# =============================================================================
+# If create_project = true, create the project. Otherwise, use existing.
+
+resource "google_project" "this" {
+  count = var.create_project ? 1 : 0
+
+  name            = var.gcp_project_id
+  project_id      = var.gcp_project_id
+  billing_account = var.billing_account
+  org_id          = var.gcp_organization_id != "" ? var.gcp_organization_id : null
+
+  lifecycle {
+    precondition {
+      condition     = var.billing_account != ""
+      error_message = "billing_account is required when create_project = true. Find yours with: gcloud billing accounts list"
+    }
+  }
+}
+
+# Enable Service Usage API first (required to enable other APIs)
+resource "google_project_service" "serviceusage" {
+  count = var.create_project ? 1 : 0
+
+  project = google_project.this[0].project_id
+  service = "serviceusage.googleapis.com"
+
+  disable_on_destroy = false
+}
+
 # Get current project information
 data "google_project" "current" {
   project_id = var.gcp_project_id
+
+  depends_on = [google_project.this]
 }
 
 # Get current user's email for default attacker identity
@@ -49,6 +82,17 @@ module "privesc-paths" {
   project_number  = local.project_number
   region          = var.gcp_region
   attacker_member = local.attacker_member
+
+  # Individual privesc path toggles (disabled by default)
+  enable_privesc11 = var.enable_privesc11
+  enable_privesc12 = var.enable_privesc12
+  enable_privesc13 = var.enable_privesc13
+  enable_privesc16 = var.enable_privesc16
+  enable_privesc17 = var.enable_privesc17
+  enable_privesc19 = var.enable_privesc19
+  enable_privesc42 = var.enable_privesc42
+
+  depends_on = [google_project_service.serviceusage]
 }
 
 module "tool-testing" {
@@ -64,31 +108,30 @@ module "tool-testing" {
 }
 
 # =============================================================================
-# NON-FREE RESOURCES - Enable via variables (will incur costs)
+# TARGET INFRASTRUCTURE - Created when corresponding privesc paths are enabled
 # =============================================================================
 
-# Compute Engine instance for testing compute-based privilege escalation
-# Enable with: enable_compute = true
-# Cost: ~$2-3/month (preemptible)
+# Compute Engine instance for privesc11/12/13 (setMetadata, osLogin, setServiceAccount)
+# Created when any compute-based privesc path is enabled
+# Cost: ~$2-5/month (preemptible e2-micro)
 module "compute" {
   source = "./modules/non-free-resources/compute"
-  count  = var.enable_compute ? 1 : 0
+  count  = (var.enable_privesc11 || var.enable_privesc12 || var.enable_privesc13) ? 1 : 0
 
   project_id      = var.gcp_project_id
   region          = var.gcp_region
   zone            = var.gcp_zone
   attacker_member = local.attacker_member
 
-  # Pass the high-privilege service account from privesc-paths
   high_priv_sa_email = module.privesc-paths.high_priv_service_account_email
 }
 
-# Cloud Functions for testing function-based privilege escalation
-# Enable with: enable_cloud_functions = true
-# Cost: Free tier usually covers testing
+# Cloud Function for privesc16/17 (updateFunction, sourceCodeSet)
+# Created when any function-based privesc path is enabled
+# Cost: Free when idle (pay per invocation)
 module "cloud-functions" {
   source = "./modules/non-free-resources/cloud-functions"
-  count  = var.enable_cloud_functions ? 1 : 0
+  count  = (var.enable_privesc16 || var.enable_privesc17) ? 1 : 0
 
   project_id      = var.gcp_project_id
   region          = var.gcp_region
@@ -97,12 +140,12 @@ module "cloud-functions" {
   high_priv_sa_email = module.privesc-paths.high_priv_service_account_email
 }
 
-# Cloud Run for testing container-based privilege escalation
-# Enable with: enable_cloud_run = true
-# Cost: Free tier usually covers testing
+# Cloud Run service for privesc19 (run.services.update)
+# Created when Cloud Run privesc path is enabled
+# Cost: Free when idle (scales to zero)
 module "cloud-run" {
   source = "./modules/non-free-resources/cloud-run"
-  count  = var.enable_cloud_run ? 1 : 0
+  count  = var.enable_privesc19 ? 1 : 0
 
   project_id      = var.gcp_project_id
   region          = var.gcp_region

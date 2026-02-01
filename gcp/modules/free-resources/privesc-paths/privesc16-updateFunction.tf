@@ -12,10 +12,14 @@
 # DETECTION: FoxMapper detects this via the updateFunction edge checker
 #
 # REAL-WORLD IMPACT: Critical - Code injection into privileged functions
+#
+# DISABLED BY DEFAULT: Requires enable_privesc16 = true (creates target function, free when idle)
 
 resource "google_service_account" "privesc16_update_function" {
-  account_id   = "${var.resource_prefix}15-update-function"
-  display_name = "Privesc15 - Update Function"
+  count = var.enable_privesc16 ? 1 : 0
+
+  account_id   = "${var.resource_prefix}16-update-function"
+  display_name = "Privesc16 - Update Function"
   description  = "Can escalate via Cloud Function code modification"
   project      = var.project_id
 
@@ -24,6 +28,8 @@ resource "google_service_account" "privesc16_update_function" {
 
 # Custom role with function update permission
 resource "google_project_iam_custom_role" "update_function" {
+  count = var.enable_privesc16 ? 1 : 0
+
   role_id     = "${var.resource_prefix}_updateFunction"
   title       = "Privesc - Update Cloud Function"
   description = "Vulnerable: Can update Cloud Function code"
@@ -38,14 +44,18 @@ resource "google_project_iam_custom_role" "update_function" {
 
 # Assign the vulnerable role
 resource "google_project_iam_member" "privesc16_role" {
+  count = var.enable_privesc16 ? 1 : 0
+
   project = var.project_id
-  role    = google_project_iam_custom_role.update_function.id
-  member  = "serviceAccount:${google_service_account.privesc16_update_function.email}"
+  role    = google_project_iam_custom_role.update_function[0].id
+  member  = "serviceAccount:${google_service_account.privesc16_update_function[0].email}"
 }
 
 # Allow the attacker to impersonate this service account
 resource "google_service_account_iam_member" "privesc16_impersonate" {
-  service_account_id = google_service_account.privesc16_update_function.name
+  count = var.enable_privesc16 ? 1 : 0
+
+  service_account_id = google_service_account.privesc16_update_function[0].name
   role               = "roles/iam.serviceAccountTokenCreator"
   member             = var.attacker_member
 }

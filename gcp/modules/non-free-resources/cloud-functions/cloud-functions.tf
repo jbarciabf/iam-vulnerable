@@ -9,6 +9,11 @@
 #   1. Invoke function to execute code as high-priv SA
 #   2. Update function code to inject malicious logic
 
+# Get project details for the compute service account
+data "google_project" "project" {
+  project_id = var.project_id
+}
+
 # Enable required APIs
 resource "google_project_service" "cloudfunctions" {
   project = var.project_id
@@ -22,6 +27,33 @@ resource "google_project_service" "cloudbuild" {
   service = "cloudbuild.googleapis.com"
 
   disable_on_destroy = false
+}
+
+resource "google_project_service" "storage" {
+  project = var.project_id
+  service = "storage.googleapis.com"
+
+  disable_on_destroy = false
+}
+
+# Grant the default compute service account access to Cloud Storage
+# Required for Cloud Functions Gen1 to access the gcf-sources bucket
+resource "google_project_iam_member" "compute_storage_access" {
+  project = var.project_id
+  role    = "roles/storage.objectViewer"
+  member  = "serviceAccount:${data.google_project.project.number}-compute@developer.gserviceaccount.com"
+
+  depends_on = [
+    google_project_service.cloudfunctions,
+    google_project_service.cloudbuild,
+    google_project_service.storage
+  ]
+}
+
+# Wait for IAM propagation
+resource "time_sleep" "wait_for_iam" {
+  depends_on      = [google_project_iam_member.compute_storage_access]
+  create_duration = "90s"
 }
 
 # Storage bucket for function source code
@@ -78,7 +110,8 @@ resource "google_cloudfunctions_function" "privesc_function" {
 
   depends_on = [
     google_project_service.cloudfunctions,
-    google_project_service.cloudbuild
+    google_project_service.cloudbuild,
+    time_sleep.wait_for_iam
   ]
 }
 

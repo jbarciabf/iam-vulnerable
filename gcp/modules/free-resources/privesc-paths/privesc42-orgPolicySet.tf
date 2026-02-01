@@ -16,10 +16,16 @@
 #
 # REAL-WORLD IMPACT: Critical - Can disable security guardrails
 #
-# NOTE: Org policy changes require appropriate organization-level permissions
-#       This path demonstrates the project-level configuration
+# NOTE: This path is DISABLED by default (enable_privesc42 = false) because
+#       it requires a GCP Organization. The orgpolicy.policy.set permission
+#       cannot be added to custom roles at the project level - it requires the
+#       predefined orgpolicy.policyAdmin role granted at org level.
+#
+# Enable with: enable_privesc42 = true (requires gcp_organization_id)
 
 resource "google_service_account" "privesc42_org_policy" {
+  count = var.enable_privesc42 ? 1 : 0
+
   account_id   = "${var.resource_prefix}42-org-policy"
   display_name = "Privesc42 - orgpolicy.policy.set"
   description  = "Can escalate via organization policy modification"
@@ -28,30 +34,22 @@ resource "google_service_account" "privesc42_org_policy" {
   depends_on = [time_sleep.batch9_delay]
 }
 
-# Create a custom role with Org Policy permissions
-resource "google_project_iam_custom_role" "privesc42_org_policy" {
-  role_id     = "${var.resource_prefix}_42_org_policy"
-  title       = "Privesc42 Org Policy Admin"
-  description = "Can modify organization policies"
-  project     = var.project_id
-
-  permissions = [
-    "orgpolicy.policy.set",
-    "orgpolicy.policy.get",
-    "orgpolicy.constraints.list",
-  ]
-}
-
-# Grant the custom role at project level
+# Use the predefined Org Policy Admin role
+# Note: orgpolicy.policy.set cannot be added to custom roles at project level
+# The SA gets the role, but actual policy modification requires org-level grant
 resource "google_project_iam_member" "privesc42_org_policy" {
+  count = var.enable_privesc42 ? 1 : 0
+
   project = var.project_id
-  role    = google_project_iam_custom_role.privesc42_org_policy.id
-  member  = "serviceAccount:${google_service_account.privesc42_org_policy.email}"
+  role    = "roles/orgpolicy.policyAdmin"
+  member  = "serviceAccount:${google_service_account.privesc42_org_policy[0].email}"
 }
 
 # Allow the attacker to impersonate this service account
 resource "google_service_account_iam_member" "privesc42_impersonate" {
-  service_account_id = google_service_account.privesc42_org_policy.name
+  count = var.enable_privesc42 ? 1 : 0
+
+  service_account_id = google_service_account.privesc42_org_policy[0].name
   role               = "roles/iam.serviceAccountTokenCreator"
   member             = var.attacker_member
 }

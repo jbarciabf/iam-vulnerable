@@ -42,11 +42,17 @@ output "summary" {
       ${module.privesc-paths.high_priv_service_account_email}
 
     Modules Enabled:
-      - privesc-paths:    Yes (43 paths)
+      - privesc-paths:    Yes (36 enabled + 7 disabled by default)
       - tool-testing:     Yes (7 tests)
-      - compute:          ${var.enable_compute ? "Yes (~$2-3/mo)" : "No (set enable_compute = true)"}
-      - cloud-functions:  ${var.enable_cloud_functions ? "Yes (free tier)" : "No (set enable_cloud_functions = true)"}
-      - cloud-run:        ${var.enable_cloud_run ? "Yes (free tier)" : "No (set enable_cloud_run = true)"}
+
+    Disabled Privesc Paths (enable individually):
+      - privesc11 (setMetadata):     ${var.enable_privesc11 ? "Enabled" : "Disabled"}
+      - privesc12 (osLogin):         ${var.enable_privesc12 ? "Enabled" : "Disabled"}
+      - privesc13 (setServiceAccount): ${var.enable_privesc13 ? "Enabled" : "Disabled"}
+      - privesc16 (updateFunction):  ${var.enable_privesc16 ? "Enabled" : "Disabled"}
+      - privesc17 (sourceCodeSet):   ${var.enable_privesc17 ? "Enabled" : "Disabled"}
+      - privesc19 (run.services.update): ${var.enable_privesc19 ? "Enabled" : "Disabled"}
+      - privesc42 (orgpolicy.policy.set): ${var.enable_privesc42 ? "Enabled" : "Disabled"}
 
     Privilege Escalation Paths Created:
     ${join("\n    ", [for name, email in module.privesc-paths.privesc_service_accounts : "- ${name}: ${email}"])}

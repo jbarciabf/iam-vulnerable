@@ -13,10 +13,14 @@
 # DETECTION: FoxMapper detects this via the setMetadata edge checker
 #
 # REAL-WORLD IMPACT: Critical - SSH access to compute instances
+#
+# DISABLED BY DEFAULT: Requires enable_privesc11 = true (creates target VM ~$2-5/mo)
 
 resource "google_service_account" "privesc11_set_metadata" {
-  account_id   = "${var.resource_prefix}12-set-metadata"
-  display_name = "Privesc12 - setMetadata"
+  count = var.enable_privesc11 ? 1 : 0
+
+  account_id   = "${var.resource_prefix}11-set-metadata"
+  display_name = "Privesc11 - setMetadata"
   description  = "Can escalate via compute metadata modification"
   project      = var.project_id
 
@@ -25,6 +29,8 @@ resource "google_service_account" "privesc11_set_metadata" {
 
 # Custom role with setMetadata permission
 resource "google_project_iam_custom_role" "set_metadata" {
+  count = var.enable_privesc11 ? 1 : 0
+
   role_id     = "${var.resource_prefix}_setMetadata"
   title       = "Privesc - Set Instance Metadata"
   description = "Vulnerable: Can modify instance metadata including SSH keys"
@@ -40,14 +46,18 @@ resource "google_project_iam_custom_role" "set_metadata" {
 
 # Assign the vulnerable role
 resource "google_project_iam_member" "privesc11_role" {
+  count = var.enable_privesc11 ? 1 : 0
+
   project = var.project_id
-  role    = google_project_iam_custom_role.set_metadata.id
-  member  = "serviceAccount:${google_service_account.privesc11_set_metadata.email}"
+  role    = google_project_iam_custom_role.set_metadata[0].id
+  member  = "serviceAccount:${google_service_account.privesc11_set_metadata[0].email}"
 }
 
 # Allow the attacker to impersonate this service account
 resource "google_service_account_iam_member" "privesc11_impersonate" {
-  service_account_id = google_service_account.privesc11_set_metadata.name
+  count = var.enable_privesc11 ? 1 : 0
+
+  service_account_id = google_service_account.privesc11_set_metadata[0].name
   role               = "roles/iam.serviceAccountTokenCreator"
   member             = var.attacker_member
 }

@@ -23,24 +23,64 @@ gcp_project_id = "your-test-project-id"
 # resource_prefix = "privesc"
 
 # =============================================================================
-# OPTIONAL MODULES - Non-free resources (disabled by default)
+# OPTIONAL: PROJECT CREATION
 # =============================================================================
-# The 31 IAM-based privesc paths are always enabled and free.
-# These optional modules create actual infrastructure for hands-on testing.
+# By default, the project must already exist. Set create_project = true to
+# have Terraform create it for you.
+#
+# To create a project, you need a billing account:
+#   gcloud billing accounts list
+#
+# create_project  = true
+# billing_account = "XXXXXX-XXXXXX-XXXXXX"
 
-# Compute Engine VM with privileged SA (~$2-3/month)
-# Required for: setMetadata exploitation, OS Login testing, metadata server access
-# enable_compute = true
+# =============================================================================
+# OPTIONAL: GCP ORGANIZATION
+# =============================================================================
+# Required only for privesc42 (orgpolicy.policy.set).
+# Most privesc paths work without an organization.
+# If set with create_project = true, the project will be created under the org.
+#
+# To get an organization, you need a verified domain through Cloud Identity Free:
+#   1. Sign up at: https://workspace.google.com/signup/gcpidentity/welcome
+#   2. Verify your domain ownership (TXT or CNAME record)
+#   3. Get org ID: gcloud organizations list
+#
+# See README.md for detailed setup instructions.
+# gcp_organization_id = "123456789012"
 
-# Cloud Functions with privileged SA (free tier)
-# Required for: function code injection testing
-# enable_cloud_functions = true
+# =============================================================================
+# DISABLED PRIVESC PATHS - Require infrastructure or organization
+# =============================================================================
+# These paths are disabled by default because they require actual infrastructure
+# (which costs money) or a GCP Organization. Enable individually as needed.
+#
+# When enabled, both the IAM resources AND target infrastructure are created.
 
-# Cloud Run service with privileged SA (free tier)
-# Required for: container deployment testing
-# enable_cloud_run = true
+# --- Compute-based paths (creates VM, ~$2-5/month) ---
+# enable_privesc11 = true  # setMetadata-compute: Add SSH keys via metadata
+# enable_privesc12 = true  # osLogin: SSH via OS Login
+# enable_privesc13 = true  # setServiceAccount: Swap SA on existing VM
 
-# Enable all optional modules:
-# enable_compute = true
-# enable_cloud_functions = true
-# enable_cloud_run = true
+# --- Cloud Functions paths (creates function, free when idle) ---
+# enable_privesc16 = true  # updateFunction: Modify function code
+# enable_privesc17 = true  # sourceCodeSet: Inject source code
+
+# --- Cloud Run paths (creates service, free when idle) ---
+# enable_privesc19 = true  # run.services.update: Modify service
+
+# --- Organization paths (requires gcp_organization_id) ---
+# enable_privesc42 = true  # orgpolicy.policy.set: Modify org policies
+
+# =============================================================================
+# ENABLE ALL DISABLED PATHS
+# =============================================================================
+# Uncomment to enable all disabled privesc paths:
+#
+# enable_privesc11 = true
+# enable_privesc12 = true
+# enable_privesc13 = true
+# enable_privesc16 = true
+# enable_privesc17 = true
+# enable_privesc19 = true
+# enable_privesc42 = true  # Requires gcp_organization_id

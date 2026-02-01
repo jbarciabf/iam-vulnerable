@@ -12,10 +12,14 @@
 # DETECTION: FoxMapper detects this via the setServiceAccount edge checker
 #
 # REAL-WORLD IMPACT: Critical - SA hijacking on existing VMs
+#
+# DISABLED BY DEFAULT: Requires enable_privesc13 = true (creates target VM ~$2-5/mo)
 
 resource "google_service_account" "privesc13_set_sa" {
-  account_id   = "${var.resource_prefix}25-set-sa"
-  display_name = "Privesc25 - setServiceAccount"
+  count = var.enable_privesc13 ? 1 : 0
+
+  account_id   = "${var.resource_prefix}13-set-sa"
+  display_name = "Privesc13 - setServiceAccount"
   description  = "Can escalate via compute.instances.setServiceAccount"
   project      = var.project_id
 
@@ -24,8 +28,10 @@ resource "google_service_account" "privesc13_set_sa" {
 
 # Create a custom role with setServiceAccount permission
 resource "google_project_iam_custom_role" "privesc13_set_sa" {
-  role_id     = "${var.resource_prefix}_25_set_sa"
-  title       = "Privesc25 Set Service Account"
+  count = var.enable_privesc13 ? 1 : 0
+
+  role_id     = "${var.resource_prefix}_13_set_sa"
+  title       = "Privesc13 Set Service Account"
   description = "Can set service account on compute instances"
   project     = var.project_id
 
@@ -38,21 +44,27 @@ resource "google_project_iam_custom_role" "privesc13_set_sa" {
 
 # Grant the custom role at project level
 resource "google_project_iam_member" "privesc13_set_sa" {
+  count = var.enable_privesc13 ? 1 : 0
+
   project = var.project_id
-  role    = google_project_iam_custom_role.privesc13_set_sa.id
-  member  = "serviceAccount:${google_service_account.privesc13_set_sa.email}"
+  role    = google_project_iam_custom_role.privesc13_set_sa[0].id
+  member  = "serviceAccount:${google_service_account.privesc13_set_sa[0].email}"
 }
 
 # Grant actAs on the high-privilege SA (required to attach it)
 resource "google_service_account_iam_member" "privesc13_actas" {
+  count = var.enable_privesc13 ? 1 : 0
+
   service_account_id = google_service_account.high_priv.name
   role               = "roles/iam.serviceAccountUser"
-  member             = "serviceAccount:${google_service_account.privesc13_set_sa.email}"
+  member             = "serviceAccount:${google_service_account.privesc13_set_sa[0].email}"
 }
 
 # Allow the attacker to impersonate this service account
 resource "google_service_account_iam_member" "privesc13_impersonate" {
-  service_account_id = google_service_account.privesc13_set_sa.name
+  count = var.enable_privesc13 ? 1 : 0
+
+  service_account_id = google_service_account.privesc13_set_sa[0].name
   role               = "roles/iam.serviceAccountTokenCreator"
   member             = var.attacker_member
 }
