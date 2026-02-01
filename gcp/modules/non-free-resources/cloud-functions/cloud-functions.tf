@@ -36,22 +36,26 @@ resource "google_storage_bucket" "function_bucket" {
   force_destroy = true
 }
 
-# Create the function source code
+# Create the function source code as a zip archive
+data "archive_file" "function_source" {
+  type        = "zip"
+  output_path = "${path.module}/function-source.zip"
+
+  source {
+    content  = <<-EOF
+      exports.handler = (req, res) => {
+        res.send('Hello from privesc function!');
+      };
+    EOF
+    filename = "index.js"
+  }
+}
+
+# Upload the function source code
 resource "google_storage_bucket_object" "function_source" {
   name   = "function-source.zip"
   bucket = google_storage_bucket.function_bucket.name
-
-  # Inline source code as a zip
-  content = base64decode(
-    # This is a base64-encoded zip containing index.js:
-    # exports.handler = (req, res) => {
-    #   const metadata = require('gcp-metadata');
-    #   metadata.project('project-id').then(p => {
-    #     res.send(`Running in project: ${p}`);
-    #   });
-    # };
-    "UEsDBBQAAAAIAAAAAIQAVwBGAEMAAABQAAAACAAcAGluZGV4LmpzVVQJAAMAAAAAAwAAAAB1eAsABBQAAAAAJwATAGV4cG9ydHMuaGFuZGxlciA9IChyZXEsIHJlcykgPT4gewogIHJlcy5zZW5kKCdIZWxsbyBmcm9tIHByaXZlc2MgZnVuY3Rpb24hJyk7Cn07ClBLAQIeAxQAAAAIAAAAAIQAVwBGAEMAAABQAAAACAAYAAAAAAABAAAApIEAAAAAaW5kZXguanNVVAUAAwAAAAB1eAsAAQQUAAAAACcAEwBQSwUGAAAAAAEAAQBOAAAAhQAAAAAA"
-  )
+  source = data.archive_file.function_source.output_path
 }
 
 # Cloud Function with high-priv SA

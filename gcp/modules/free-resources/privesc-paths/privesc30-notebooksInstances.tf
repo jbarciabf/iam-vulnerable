@@ -21,6 +21,8 @@ resource "google_service_account" "privesc30_notebooks" {
   display_name = "Privesc30 - Vertex AI Notebooks"
   description  = "Can escalate via notebooks.instances.create"
   project      = var.project_id
+
+  depends_on = [time_sleep.batch7_delay]
 }
 
 # Create a custom role with Notebooks permissions

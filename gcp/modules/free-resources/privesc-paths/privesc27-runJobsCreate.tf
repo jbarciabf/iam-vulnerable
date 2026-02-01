@@ -18,6 +18,8 @@ resource "google_service_account" "privesc27_run_jobs" {
   display_name = "Privesc27 - Cloud Run Jobs"
   description  = "Can escalate via run.jobs.create"
   project      = var.project_id
+
+  depends_on = [time_sleep.batch7_delay]
 }
 
 # Create a custom role with Cloud Run jobs permissions

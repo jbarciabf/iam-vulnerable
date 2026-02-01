@@ -18,6 +18,8 @@ resource "google_service_account" "privesc9_sign_blob" {
   display_name = "Privesc9 - signBlob"
   description  = "Can escalate via blob signing"
   project      = var.project_id
+
+  depends_on = [time_sleep.batch3_delay]
 }
 
 # Custom role with signBlob permission

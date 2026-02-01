@@ -18,6 +18,8 @@ resource "google_service_account" "privesc6_actas_cloudrun" {
   display_name = "Privesc6 - actAs + Cloud Run"
   description  = "Can escalate via Cloud Run with high-priv SA"
   project      = var.project_id
+
+  depends_on = [time_sleep.batch3_delay]
 }
 
 # Grant actAs on the high-privilege service account

@@ -3,6 +3,47 @@
 # This file contains shared resources used across multiple privilege escalation paths.
 
 # =============================================================================
+# RATE LIMITING - Prevent hitting GCP's "service accounts per minute" quota
+# =============================================================================
+# GCP limits service account creation to ~5-10 per minute per project.
+# We create batches with delays to avoid hitting this limit.
+# Each privesc path depends on a batch delay to serialize creation.
+
+resource "time_sleep" "batch1_delay" {
+  create_duration = "0s" # First batch starts immediately
+}
+
+resource "time_sleep" "batch2_delay" {
+  depends_on      = [time_sleep.batch1_delay]
+  create_duration = "65s" # Wait after batch 1
+}
+
+resource "time_sleep" "batch3_delay" {
+  depends_on      = [time_sleep.batch2_delay]
+  create_duration = "65s" # Wait after batch 2
+}
+
+resource "time_sleep" "batch4_delay" {
+  depends_on      = [time_sleep.batch3_delay]
+  create_duration = "65s" # Wait after batch 3
+}
+
+resource "time_sleep" "batch5_delay" {
+  depends_on      = [time_sleep.batch4_delay]
+  create_duration = "65s" # Wait after batch 4
+}
+
+resource "time_sleep" "batch6_delay" {
+  depends_on      = [time_sleep.batch5_delay]
+  create_duration = "65s" # Wait after batch 5
+}
+
+resource "time_sleep" "batch7_delay" {
+  depends_on      = [time_sleep.batch6_delay]
+  create_duration = "65s" # Wait after batch 6
+}
+
+# =============================================================================
 # HIGH-PRIVILEGE TARGET SERVICE ACCOUNT
 # =============================================================================
 # This is the "crown jewel" - the target of privilege escalation.
@@ -13,6 +54,8 @@ resource "google_service_account" "high_priv" {
   display_name = "High Privilege Service Account"
   description  = "Target service account for privilege escalation - has Owner role"
   project      = var.project_id
+
+  depends_on = [time_sleep.batch1_delay]
 }
 
 # Grant the high-privilege SA the Owner role
@@ -32,6 +75,8 @@ resource "google_service_account" "medium_priv" {
   display_name = "Medium Privilege Service Account"
   description  = "Intermediate privilege service account for escalation chains"
   project      = var.project_id
+
+  depends_on = [time_sleep.batch1_delay]
 }
 
 # Grant Editor role (can do most things except IAM)

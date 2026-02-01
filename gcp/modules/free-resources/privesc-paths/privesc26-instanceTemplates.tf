@@ -18,6 +18,8 @@ resource "google_service_account" "privesc26_instance_templates" {
   display_name = "Privesc26 - Instance Templates"
   description  = "Can escalate via compute.instanceTemplates.create"
   project      = var.project_id
+
+  depends_on = [time_sleep.batch6_delay]
 }
 
 # Create a custom role with instance template permissions

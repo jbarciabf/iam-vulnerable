@@ -32,3 +32,25 @@ variable "resource_prefix" {
   type        = string
   default     = "privesc"
 }
+
+# =============================================================================
+# MODULE TOGGLES - Enable/disable optional modules
+# =============================================================================
+
+variable "enable_compute" {
+  description = "Enable Compute Engine module (creates VM with privileged SA). Cost: ~$2-3/month"
+  type        = bool
+  default     = false
+}
+
+variable "enable_cloud_functions" {
+  description = "Enable Cloud Functions module (creates function with privileged SA). Cost: Free tier"
+  type        = bool
+  default     = false
+}
+
+variable "enable_cloud_run" {
+  description = "Enable Cloud Run module (creates service with privileged SA). Cost: Free tier"
+  type        = bool
+  default     = false
+}

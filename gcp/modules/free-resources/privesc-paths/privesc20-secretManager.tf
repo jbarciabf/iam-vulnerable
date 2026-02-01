@@ -18,6 +18,8 @@ resource "google_service_account" "privesc20_secret_access" {
   display_name = "Privesc20 - Secret Manager"
   description  = "Can access secrets in Secret Manager"
   project      = var.project_id
+
+  depends_on = [time_sleep.batch5_delay]
 }
 
 # Grant Secret Manager accessor

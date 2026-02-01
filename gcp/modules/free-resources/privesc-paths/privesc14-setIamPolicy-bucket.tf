@@ -18,6 +18,8 @@ resource "google_service_account" "privesc14_bucket_iam" {
   display_name = "Privesc14 - Bucket IAM"
   description  = "Can escalate via storage bucket IAM modification"
   project      = var.project_id
+
+  depends_on = [time_sleep.batch4_delay]
 }
 
 # Custom role with bucket IAM manipulation

@@ -18,6 +18,8 @@ resource "google_service_account" "privesc4_actas_compute" {
   display_name = "Privesc4 - actAs + Compute"
   description  = "Can escalate via VM creation with high-priv SA"
   project      = var.project_id
+
+  depends_on = [time_sleep.batch2_delay]
 }
 
 # Grant actAs on the high-privilege service account

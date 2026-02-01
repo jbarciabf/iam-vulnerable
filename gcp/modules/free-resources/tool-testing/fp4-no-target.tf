@@ -16,6 +16,8 @@ resource "google_service_account" "fp4_no_target" {
   display_name = "FP4 - No Viable Target"
   description  = "Has actAs but only on unprivileged SA"
   project      = var.project_id
+
+  depends_on = [time_sleep.tt_batch2_delay]
 }
 
 # Create an unprivileged service account as the only target
@@ -24,6 +26,8 @@ resource "google_service_account" "fp4_unprivileged_target" {
   display_name = "FP4 - Unprivileged Target"
   description  = "Has no special permissions"
   project      = var.project_id
+
+  depends_on = [time_sleep.tt_batch2_delay]
 }
 
 # This SA has NO roles at all - it's completely unprivileged

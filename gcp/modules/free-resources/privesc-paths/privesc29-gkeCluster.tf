@@ -21,6 +21,8 @@ resource "google_service_account" "privesc29_gke" {
   display_name = "Privesc29 - GKE Clusters"
   description  = "Can escalate via container.clusters.create"
   project      = var.project_id
+
+  depends_on = [time_sleep.batch7_delay]
 }
 
 # Create a custom role with GKE permissions

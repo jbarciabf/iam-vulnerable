@@ -18,6 +18,8 @@ resource "google_service_account" "privesc16_deny_bypass" {
   display_name = "Privesc16 - Deny Bypass"
   description  = "Can escalate by bypassing explicit deny via SA chaining"
   project      = var.project_id
+
+  depends_on = [time_sleep.batch5_delay]
 }
 
 # Grant impersonation on the medium privilege SA

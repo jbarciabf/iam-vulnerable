@@ -21,6 +21,8 @@ resource "google_service_account" "privesc28_dataproc" {
   display_name = "Privesc28 - Dataproc Clusters"
   description  = "Can escalate via dataproc.clusters.create"
   project      = var.project_id
+
+  depends_on = [time_sleep.batch7_delay]
 }
 
 # Create a custom role with Dataproc permissions

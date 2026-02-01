@@ -17,6 +17,8 @@ resource "google_service_account" "privesc23_implicit_delegation" {
   display_name = "Privesc23 - Implicit Delegation"
   description  = "Can escalate via implicit delegation chain"
   project      = var.project_id
+
+  depends_on = [time_sleep.batch6_delay]
 }
 
 # Grant implicit delegation on the medium-priv SA

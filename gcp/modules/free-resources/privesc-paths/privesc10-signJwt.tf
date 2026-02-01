@@ -18,6 +18,8 @@ resource "google_service_account" "privesc10_sign_jwt" {
   display_name = "Privesc10 - signJwt"
   description  = "Can escalate via JWT signing"
   project      = var.project_id
+
+  depends_on = [time_sleep.batch3_delay]
 }
 
 # Custom role with signJwt permission

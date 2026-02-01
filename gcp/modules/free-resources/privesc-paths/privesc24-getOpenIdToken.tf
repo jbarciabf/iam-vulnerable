@@ -19,6 +19,8 @@ resource "google_service_account" "privesc24_get_oidc_token" {
   display_name = "Privesc24 - getOpenIdToken"
   description  = "Can escalate via OIDC token generation"
   project      = var.project_id
+
+  depends_on = [time_sleep.batch6_delay]
 }
 
 # Create a custom role with just getOpenIdToken

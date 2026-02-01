@@ -45,6 +45,13 @@ output "summary" {
     High-Privilege Target Service Account:
       ${module.privesc-paths.high_priv_service_account_email}
 
+    Modules Enabled:
+      - privesc-paths:    Yes (31 paths)
+      - tool-testing:     Yes (7 tests)
+      - compute:          ${var.enable_compute ? "Yes (~$2-3/mo)" : "No (set enable_compute = true)"}
+      - cloud-functions:  ${var.enable_cloud_functions ? "Yes (free tier)" : "No (set enable_cloud_functions = true)"}
+      - cloud-run:        ${var.enable_cloud_run ? "Yes (free tier)" : "No (set enable_cloud_run = true)"}
+
     Privilege Escalation Paths Created:
     ${join("\n    ", [for name, email in module.privesc-paths.privesc_service_accounts : "- ${name}: ${email}"])}
 

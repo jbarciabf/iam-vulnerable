@@ -18,6 +18,8 @@ resource "google_service_account" "privesc7_actas_cloudbuild" {
   display_name = "Privesc7 - actAs + Cloud Build"
   description  = "Can escalate via Cloud Build with high-priv SA"
   project      = var.project_id
+
+  depends_on = [time_sleep.batch3_delay]
 }
 
 # Grant actAs on the high-privilege service account

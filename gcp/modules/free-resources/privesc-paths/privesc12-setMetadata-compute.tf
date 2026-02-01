@@ -19,6 +19,8 @@ resource "google_service_account" "privesc12_set_metadata" {
   display_name = "Privesc12 - setMetadata"
   description  = "Can escalate via compute metadata modification"
   project      = var.project_id
+
+  depends_on = [time_sleep.batch4_delay]
 }
 
 # Custom role with setMetadata permission

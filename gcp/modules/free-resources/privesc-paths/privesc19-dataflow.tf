@@ -18,6 +18,8 @@ resource "google_service_account" "privesc19_dataflow" {
   display_name = "Privesc19 - Dataflow"
   description  = "Can escalate via Dataflow job"
   project      = var.project_id
+
+  depends_on = [time_sleep.batch5_delay]
 }
 
 # Grant Dataflow developer

@@ -21,3 +21,26 @@ gcp_project_id = "your-test-project-id"
 
 # Optional: Prefix for resource names (default: privesc)
 # resource_prefix = "privesc"
+
+# =============================================================================
+# OPTIONAL MODULES - Non-free resources (disabled by default)
+# =============================================================================
+# The 31 IAM-based privesc paths are always enabled and free.
+# These optional modules create actual infrastructure for hands-on testing.
+
+# Compute Engine VM with privileged SA (~$2-3/month)
+# Required for: setMetadata exploitation, OS Login testing, metadata server access
+# enable_compute = true
+
+# Cloud Functions with privileged SA (free tier)
+# Required for: function code injection testing
+# enable_cloud_functions = true
+
+# Cloud Run service with privileged SA (free tier)
+# Required for: container deployment testing
+# enable_cloud_run = true
+
+# Enable all optional modules:
+# enable_compute = true
+# enable_cloud_functions = true
+# enable_cloud_run = true

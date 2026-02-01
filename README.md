@@ -193,15 +193,22 @@ See [gcp/README.md](gcp/) for detailed GCP documentation.
 
 ## GCP Cost
 
-| Module | Default | Cost/Hour | Cost/Month | Required For |
-|--------|---------|-----------|------------|--------------|
-| privesc-paths (31) | Enabled | **$0** | **Free** | All IAM paths |
-| tool-testing | Enabled | **$0** | **Free** | Tool validation |
-| Compute | Disabled | ~$0.002 | ~$2-3 | setMetadata, osLogin |
-| Cloud Functions | Disabled | $0 | Free tier | updateFunction |
-| Cloud Run | Disabled | $0 | Free tier | actAs-cloudrun |
+| Module | Default | Variable to Enable | Cost/Month | Required For |
+|--------|---------|-------------------|------------|--------------|
+| privesc-paths (31) | Enabled | Always on | **Free** | All IAM paths |
+| tool-testing | Enabled | Always on | **Free** | Tool validation |
+| Compute | Disabled | `enable_compute = true` | ~$2-3 | setMetadata, osLogin |
+| Cloud Functions | Disabled | `enable_cloud_functions = true` | Free tier | updateFunction |
+| Cloud Run | Disabled | `enable_cloud_run = true` | Free tier | actAs-cloudrun |
 
 **Default deployment: $0** (IAM resources only)
+
+Enable optional modules in `terraform.tfvars`:
+```hcl
+enable_compute         = true  # Add VM for hands-on testing
+enable_cloud_functions = true  # Add Cloud Function
+enable_cloud_run       = true  # Add Cloud Run service
+```
 
 # Tool Testing
 

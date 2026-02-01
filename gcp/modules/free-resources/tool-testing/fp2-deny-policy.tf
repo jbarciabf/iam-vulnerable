@@ -19,6 +19,8 @@ resource "google_service_account" "fp2_denied" {
   display_name = "FP2 - Explicitly Denied"
   description  = "Has setIamPolicy but should be denied by policy"
   project      = var.project_id
+
+  depends_on = [time_sleep.tt_batch1_delay]
 }
 
 # Grant setIamPolicy through Editor role

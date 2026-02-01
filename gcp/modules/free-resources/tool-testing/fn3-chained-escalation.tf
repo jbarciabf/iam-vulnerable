@@ -16,6 +16,8 @@ resource "google_service_account" "fn3_hop1" {
   display_name = "FN3 - Hop 1"
   description  = "First hop in escalation chain"
   project      = var.project_id
+
+  depends_on = [time_sleep.tt_batch2_delay]
 }
 
 resource "google_service_account" "fn3_hop2" {
@@ -23,6 +25,8 @@ resource "google_service_account" "fn3_hop2" {
   display_name = "FN3 - Hop 2"
   description  = "Second hop in escalation chain"
   project      = var.project_id
+
+  depends_on = [time_sleep.tt_batch2_delay]
 }
 
 resource "google_service_account" "fn3_hop3" {
@@ -30,6 +34,8 @@ resource "google_service_account" "fn3_hop3" {
   display_name = "FN3 - Hop 3 (Target)"
   description  = "Final hop - has Owner"
   project      = var.project_id
+
+  depends_on = [time_sleep.tt_batch2_delay]
 }
 
 # Hop3 has Owner

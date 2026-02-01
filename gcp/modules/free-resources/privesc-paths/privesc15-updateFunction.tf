@@ -18,6 +18,8 @@ resource "google_service_account" "privesc15_update_function" {
   display_name = "Privesc15 - Update Function"
   description  = "Can escalate via Cloud Function code modification"
   project      = var.project_id
+
+  depends_on = [time_sleep.batch4_delay]
 }
 
 # Custom role with function update permission

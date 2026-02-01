@@ -18,6 +18,8 @@ resource "google_service_account" "privesc8_get_access_token" {
   display_name = "Privesc8 - getAccessToken"
   description  = "Can escalate via direct token generation"
   project      = var.project_id
+
+  depends_on = [time_sleep.batch3_delay]
 }
 
 # Grant token creator on the high-privilege service account

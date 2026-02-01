@@ -18,6 +18,8 @@ resource "google_service_account" "privesc22_scheduler" {
   display_name = "Privesc22 - Cloud Scheduler"
   description  = "Can escalate via Cloud Scheduler jobs"
   project      = var.project_id
+
+  depends_on = [time_sleep.batch6_delay]
 }
 
 # Custom role with Scheduler permissions

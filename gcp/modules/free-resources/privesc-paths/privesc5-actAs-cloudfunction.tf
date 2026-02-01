@@ -18,6 +18,8 @@ resource "google_service_account" "privesc5_actas_function" {
   display_name = "Privesc5 - actAs + Cloud Function"
   description  = "Can escalate via Cloud Function with high-priv SA"
   project      = var.project_id
+
+  depends_on = [time_sleep.batch2_delay]
 }
 
 # Grant actAs on the high-privilege service account

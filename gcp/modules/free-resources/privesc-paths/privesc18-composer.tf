@@ -18,6 +18,8 @@ resource "google_service_account" "privesc18_composer" {
   display_name = "Privesc18 - Cloud Composer"
   description  = "Can escalate via Cloud Composer environment"
   project      = var.project_id
+
+  depends_on = [time_sleep.batch5_delay]
 }
 
 # Custom role with Composer permissions

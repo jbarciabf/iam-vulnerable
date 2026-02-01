@@ -18,6 +18,8 @@ resource "google_service_account" "privesc31_workflows" {
   display_name = "Privesc31 - Cloud Workflows"
   description  = "Can escalate via workflows.workflows.create"
   project      = var.project_id
+
+  depends_on = [time_sleep.batch7_delay]
 }
 
 # Create a custom role with Workflows permissions

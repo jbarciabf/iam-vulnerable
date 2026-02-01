@@ -19,6 +19,8 @@ resource "google_service_account" "privesc17_deployment_manager" {
   display_name = "Privesc17 - Deployment Manager"
   description  = "Can escalate via Deployment Manager"
   project      = var.project_id
+
+  depends_on = [time_sleep.batch5_delay]
 }
 
 # Grant Deployment Manager editor

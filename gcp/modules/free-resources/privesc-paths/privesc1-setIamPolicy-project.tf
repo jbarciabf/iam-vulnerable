@@ -18,6 +18,8 @@ resource "google_service_account" "privesc1_set_iam_policy" {
   display_name = "Privesc1 - setIamPolicy on Project"
   description  = "Can escalate by modifying project IAM policy"
   project      = var.project_id
+
+  depends_on = [time_sleep.batch2_delay]
 }
 
 # Custom role with the vulnerable permissions

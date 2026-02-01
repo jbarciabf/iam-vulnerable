@@ -18,6 +18,8 @@ resource "google_service_account" "privesc13_os_login" {
   display_name = "Privesc13 - OS Login"
   description  = "Can escalate via OS Login SSH access"
   project      = var.project_id
+
+  depends_on = [time_sleep.batch4_delay]
 }
 
 # Grant OS Login permissions

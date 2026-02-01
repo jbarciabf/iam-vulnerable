@@ -16,6 +16,8 @@ resource "google_service_account" "fp1_restrictive_condition" {
   display_name = "FP1 - Restrictive Condition"
   description  = "Has setIamPolicy but with truly restrictive condition"
   project      = var.project_id
+
+  depends_on = [time_sleep.tt_batch1_delay]
 }
 
 # Custom role with setIamPolicy

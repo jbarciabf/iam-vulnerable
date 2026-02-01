@@ -17,6 +17,8 @@ resource "google_service_account" "privesc2_create_key" {
   display_name = "Privesc2 - Create SA Key"
   description  = "Can escalate by creating keys for high-priv SA"
   project      = var.project_id
+
+  depends_on = [time_sleep.batch2_delay]
 }
 
 # Custom role that allows creating keys for service accounts

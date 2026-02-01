@@ -16,6 +16,8 @@ resource "google_service_account" "fp3_scope_limited" {
   display_name = "FP3 - Scope Limited"
   description  = "Can only create keys for itself"
   project      = var.project_id
+
+  depends_on = [time_sleep.tt_batch1_delay]
 }
 
 # Grant key creation only on itself (using SA-level IAM, not project-level)

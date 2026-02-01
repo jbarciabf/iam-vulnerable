@@ -18,6 +18,8 @@ resource "google_service_account" "privesc11_update_role" {
   display_name = "Privesc11 - Update Role"
   description  = "Can escalate by modifying custom roles"
   project      = var.project_id
+
+  depends_on = [time_sleep.batch4_delay]
 }
 
 # Create a custom role that the SA has

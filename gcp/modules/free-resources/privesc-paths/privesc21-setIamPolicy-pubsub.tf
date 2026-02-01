@@ -18,6 +18,8 @@ resource "google_service_account" "privesc21_pubsub_iam" {
   display_name = "Privesc21 - Pub/Sub IAM"
   description  = "Can modify Pub/Sub IAM policies"
   project      = var.project_id
+
+  depends_on = [time_sleep.batch6_delay]
 }
 
 # Custom role with Pub/Sub IAM permissions

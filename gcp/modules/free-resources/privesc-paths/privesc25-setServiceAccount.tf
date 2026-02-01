@@ -18,6 +18,8 @@ resource "google_service_account" "privesc25_set_sa" {
   display_name = "Privesc25 - setServiceAccount"
   description  = "Can escalate via compute.instances.setServiceAccount"
   project      = var.project_id
+
+  depends_on = [time_sleep.batch6_delay]
 }
 
 # Create a custom role with setServiceAccount permission

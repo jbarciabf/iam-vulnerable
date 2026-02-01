@@ -18,6 +18,8 @@ resource "google_service_account" "fn2_indirect_actas" {
   display_name = "FN2 - Indirect actAs"
   description  = "Has indirect actAs via group membership (requires external group setup)"
   project      = var.project_id
+
+  depends_on = [time_sleep.tt_batch1_delay]
 }
 
 # High-privilege SA for this test
@@ -26,6 +28,8 @@ resource "google_service_account" "fn2_target" {
   display_name = "FN2 - Target SA"
   description  = "Target for indirect actAs test"
   project      = var.project_id
+
+  depends_on = [time_sleep.tt_batch1_delay]
 }
 
 # Grant Editor to the target SA
