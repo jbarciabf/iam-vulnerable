@@ -1,263 +1,285 @@
 
 # IAM Vulnerable
-Use Terraform to create your own *vulnerable by design* AWS IAM privilege escalation playground.
+
+Use Terraform to create your own *vulnerable by design* cloud IAM privilege escalation playground.
 
 ![](.images/IAMVulnerable-350px.png)
 
+IAM Vulnerable uses Terraform and your cloud credentials to deploy intentionally vulnerable IAM configurations. Within minutes, you can start learning how to identify and exploit vulnerable IAM configurations that allow for privilege escalation.
 
-IAM Vulnerable uses the Terraform binary and your AWS credentials to deploy over 250 IAM resources into your selected AWS account. Within minutes, you can start learning how to identify and exploit vulnerable IAM configurations that allow for privilege escalation.
+## Supported Cloud Platforms
+
+| Cloud | Directory | Privilege Escalation Paths | Status |
+|-------|-----------|---------------------------|--------|
+| **AWS** | [`aws/`](aws/) | 31 paths | Production |
+| **GCP** | [`gcp/`](gcp/) | 31 paths | Production |
+
+## Quick Start
+
+### Choose Your Cloud
+
+```bash
+# Clone the repository
+git clone https://github.com/BishopFox/iam-vulnerable
+cd iam-vulnerable
+
+# For AWS
+cd aws
+terraform init && terraform apply
+
+# For GCP
+cd gcp
+cp terraform.tfvars.example terraform.tfvars
+# Edit terraform.tfvars with your project ID
+terraform init && terraform apply
+```
+
+### AWS Quick Start
+
+1. Select or create an AWS account (Do NOT use an account with production resources!)
+2. [Create a non-root user with administrative access](https://docs.aws.amazon.com/IAM/latest/UserGuide/getting-started_create-admin-group.html)
+3. [Configure your AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-quickstart.html) with the admin user
+4. Deploy:
+   ```bash
+   cd aws
+   terraform init
+   terraform apply
+   ```
+
+### GCP Quick Start
+
+1. Select or create a GCP project (Do NOT use a project with production resources!)
+2. Enable the required APIs and set up authentication
+3. Deploy:
+   ```bash
+   cd gcp
+   cp terraform.tfvars.example terraform.tfvars
+   # Edit terraform.tfvars and set your project ID
+   terraform init
+   terraform apply
+   ```
 
 # IAM Vulnerable's big brother - CloudFoxable
 
-Hey all. IAM Vulnerable is still immensely useful for understanding the basic building blocks of AWS IAM privilege escaltion. However, a few years after making IAM vulnerable, I created CloudFoxable, a CTF style version that teaches you the basics of cloud penetration testing more wholisisticlly. - [@sethsec](https://www.linkedin.com/in/sethart/)
+Hey all. IAM Vulnerable is still immensely useful for understanding the basic building blocks of cloud IAM privilege escalation. However, a few years after making IAM vulnerable, I created CloudFoxable, a CTF style version that teaches you the basics of cloud penetration testing more wholistically. - [@sethsec](https://www.linkedin.com/in/sethart/)
 
-#### Intentionally Vulnerable Playground 
+#### Intentionally Vulnerable Playground
 * [CloudFoxable - A Gamified Cloud Hacking Sandbox](https://cloudfoxable.bishopfox.com/)
 
-#### Want to chat about IAM-Vulnerable, CloudFox, and CloudFoxable? 
+#### Want to chat about IAM-Vulnerable, CloudFox, and CloudFoxable?
 Join us on the [RedSec discord server](https://discord.gg/redsec)
 
-:fox_face:  **Currently supported privilege escalation paths:         31**
-
 # Table of Contents
-- [IAM Vulnerable](#iam-vulnerable)
-- [Recommended Approach](#recommended-approach)
-- [Detailed Usage Instructions](#detailed-usage-instructions)
-- [Quick Start](#quick-start)
-  - [What resources were just created?](#what-resources-were-just-created)
-  - [How much is this going to cost?](#how-much-is-this-going-to-cost)
-- [A Modular Approach](#a-modular-approach)
-  - [Free resource modules](#free-resource-modules)
-  - [Non-free resource modules](#non-free-resource-modules)
-- [Supported Privilege Escalation Paths](#supported-privilege-escalation-paths)
-- [Other Use Cases](#other-use-cases)  
+
+- [AWS Privilege Escalation Paths](#aws-privilege-escalation-paths)
+- [GCP Privilege Escalation Paths](#gcp-privilege-escalation-paths)
+- [Cost Information](#cost-information)
+- [Tool Testing](#tool-testing)
+- [Cleanup](#cleanup)
 - [FAQ](#faq)
 
-# Recommended Approach
+# AWS Privilege Escalation Paths
 
-1. **Select or create an AWS account** - Do NOT use an account that has any production resources or sensitive data.
-2. **Create your vulnerable playground** - Use this repo to create the IAM principals and policies that support 31 unique AWS IAM privesc paths.
-3. **Do your homework** - Learn about the 21 original privesc paths [pioneered by Spencer Gietzen](https://rhinosecuritylabs.com/aws/aws-privilege-escalation-methods-mitigation/).
-4. **Hacky, hack** - Practice exploitation in your new playground [using Gerben Kleijn's guide](https://labs.bishopfox.com/tech-blog/privilege-escalation-in-aws).
-5. **Level up** - Run your tools against your new IAM privesc playground account (i.e., [Cloudsplaining](https://github.com/salesforce/cloudsplaining/), [AWSPX](https://github.com/FSecureLABS/awspx), [Principal Mapper](https://github.com/nccgroup/PMapper), [Pacu](https://github.com/RhinoSecurityLabs/pacu)).
+:fox_face: **AWS paths: 31**
 
-# Detailed Usage Instructions
+See [aws/README.md](aws/) for detailed AWS documentation.
 
-[Blog Post: IAM Vulnerable - An AWS IAM Privilege Escalation Playground](https://labs.bishopfox.com/tech-blog/iam-vulnerable-an-aws-iam-privilege-escalation-playground)
+| Category | Path Name | Description |
+|----------|-----------|-------------|
+| **IAM Permissions on Other Users** | | |
+| | IAM-CreateAccessKey | Create access key for another user |
+| | IAM-CreateLoginProfile | Create console login for another user |
+| | IAM-UpdateLoginProfile | Update another user's console password |
+| **PassRole to Service** | | |
+| | CloudFormation-PassExistingRoleToCloudFormation | Pass role to CloudFormation |
+| | CodeBuild-CreateProjectPassRole | Pass role to CodeBuild |
+| | DataPipeline-PassExistingRoleToNewDataPipeline | Pass role to Data Pipeline |
+| | EC2-CreateInstanceWithExistingProfile | Create EC2 with privileged instance profile |
+| | Glue-PassExistingRoleToNewGlueDevEndpoint | Pass role to Glue |
+| | Lambda-PassExistingRoleToNewLambdaThenInvoke | Pass role to Lambda |
+| | Lambda-PassRoleToNewLambdaThenTrigger | Pass role to Lambda with trigger |
+| | SageMaker-CreateNotebookPassRole | Pass role to SageMaker notebook |
+| | SageMaker-CreateTrainingJobPassRole | Pass role to SageMaker training |
+| | SageMaker-CreateProcessingJobPassRole | Pass role to SageMaker processing |
+| **Permissions on Policies** | | |
+| | IAM-AddUserToGroup | Add self to admin group |
+| | IAM-AttachGroupPolicy | Attach policy to group |
+| | IAM-AttachRolePolicy | Attach policy to role |
+| | IAM-AttachUserPolicy | Attach policy to user |
+| | IAM-CreateNewPolicyVersion | Create new policy version |
+| | IAM-PutGroupPolicy | Put inline policy on group |
+| | IAM-PutRolePolicy | Put inline policy on role |
+| | IAM-PutUserPolicy | Put inline policy on user |
+| | IAM-SetExistingDefaultPolicyVersion | Set default policy version |
+| **AWS Service Escalation** | | |
+| | EC2InstanceConnect-SendSSHPublicKey | SSH via EC2 Instance Connect |
+| | CloudFormation-UpdateStack | Update CloudFormation stack |
+| | Glue-UpdateExistingGlueDevEndpoint | Update Glue endpoint |
+| | Lambda-EditExistingLambdaFunctionWithRole | Edit Lambda function code |
+| | SageMakerCreatePresignedNotebookURL | Get SageMaker presigned URL |
+| | SSM-SendCommand | Send SSM command |
+| | SSM-StartSession | Start SSM session |
+| | STS-AssumeRole | Assume privileged role |
+| **AssumeRole Policy** | | |
+| | IAM-UpdatingAssumeRolePolicy | Update role trust policy |
 
-# Quick Start  
+# GCP Privilege Escalation Paths
 
-This quick start outlines an opinionated approach to getting IAM Vulnerable up and running in your AWS account as quickly as possible. You might have many of these steps already completed, or you might want to tweak things to work with your current configuration. Check out the [Other Use Cases](#other-use-cases) section in this repository for some additional configuration options.
+:cloud: **GCP paths: 31**
 
-1. Select or create an AWS account. (Do NOT use an account that has any production resources or sensitive data!)
-2. [Create a non-root user with administrative access](https://docs.aws.amazon.com/IAM/latest/UserGuide/getting-started_create-admin-group.html) that you will use when running Terraform.
-3. [Create an access key for that user](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_access-keys.html).
-4. [Install the AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/install-cliv2.html).
-5. [Configure your AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-quickstart.html) with your newly created admin user as the default profile.
-6. Confirm your CLI is working as expected by executing `aws sts get-caller-identity`.
-7. [Install the Terraform binary](https://www.terraform.io/downloads.html) and add the binary location to your path.
-8. `git clone https://github.com/BishopFox/iam-vulnerable`
-9. `cd iam-vulnerable/`
-10. `terraform init`
-11. (Optional) `export TF_VAR_aws_local_profile=PROFILE_IN_AWS_CREDENTIALS_FILE_IF_OTHER_THAN_DEFAULT`  
-12. (Optional) `export TF_VAR_aws_local_creds_file=FILE_LOCATION_IF_NON_DEFAULT`
-13. (Optional) `terraform plan`
-14. `terraform apply`
-15. (Optional) Add the IAM vulnerable profiles to your AWS credentials file, and change the account number.
-      * The following commands make a backup of your current AWS credentials file, then takes the example credentials file from the repo and replaces the placeholder account with your target account number, and finally adds all of the IAM Vulnerable privesc profiles to your credentials file so you can use them:
-      * `cp ~/.aws/credentials ~/.aws/credentials.backup`
-      * `tail -n +7 aws_credentials_file_example | sed s/111111111111/$(aws sts get-caller-identity | grep Account | awk -F\" '{print $4}')/g >> ~/.aws/credentials`
+See [gcp/README.md](gcp/) for detailed GCP documentation.
 
-**Cleanup**
+| # | Path Name | Vulnerable Permission | Description |
+|---|-----------|----------------------|-------------|
+| 1 | setIamPolicy-project | `resourcemanager.projects.setIamPolicy` | Grant self Owner role |
+| 2 | createServiceAccountKey | `iam.serviceAccountKeys.create` | Create key for privileged SA |
+| 3 | setIamPolicy-serviceAccount | `iam.serviceAccounts.setIamPolicy` | Grant self actAs on privileged SA |
+| 4 | actAs-compute | `iam.serviceAccounts.actAs` + `compute.instances.create` | Create VM as privileged SA |
+| 5 | actAs-cloudfunction | `actAs` + `cloudfunctions.functions.create` | Deploy function as privileged SA |
+| 6 | actAs-cloudrun | `actAs` + `run.services.create` | Deploy Cloud Run as privileged SA |
+| 7 | actAs-cloudbuild | `actAs` + `cloudbuild.builds.create` | Run build as privileged SA |
+| 8 | getAccessToken | `iam.serviceAccounts.getAccessToken` | Generate token for privileged SA |
+| 9 | signBlob | `iam.serviceAccounts.signBlob` | Sign data as privileged SA |
+| 10 | signJwt | `iam.serviceAccounts.signJwt` | Sign JWT as privileged SA |
+| 11 | updateRole | `iam.roles.update` | Add permissions to custom role |
+| 12 | setMetadata-compute | `compute.instances.setMetadata` | Add SSH key to instance |
+| 13 | osLogin | `compute.instances.osAdminLogin` | SSH via OS Login |
+| 14 | setIamPolicy-bucket | `storage.buckets.setIamPolicy` | Grant access to buckets |
+| 15 | updateFunction | `cloudfunctions.functions.update` | Modify function code |
+| 16 | explicitDeny-bypass | SA chaining | Bypass deny via SA impersonation |
+| 17 | deploymentManager | `deploymentmanager.deployments.create` | Deploy infra as privileged SA |
+| 18 | composer | `composer.environments.create` | Create Composer as privileged SA |
+| 19 | dataflow | `dataflow.jobs.create` | Run Dataflow as privileged SA |
+| 20 | secretManager | `secretmanager.versions.access` | Access secrets directly |
+| 21 | setIamPolicy-pubsub | `pubsub.topics.setIamPolicy` | Modify Pub/Sub access |
+| 22 | cloudScheduler | `cloudscheduler.jobs.create` | Create scheduler with SA identity |
+| 23 | implicitDelegation | `iam.serviceAccounts.implicitDelegation` | Multi-hop impersonation chain |
+| 24 | getOpenIdToken | `iam.serviceAccounts.getOpenIdToken` | Generate OIDC tokens for services |
+| 25 | setServiceAccount | `compute.instances.setServiceAccount` | Change VM's service account |
+| 26 | instanceTemplates | `compute.instanceTemplates.create` | Create templates with priv SA |
+| 27 | runJobsCreate | `run.jobs.create` + `actAs` | Create Cloud Run job as priv SA |
+| 28 | dataprocClusters | `dataproc.clusters.create` + `actAs` | Create Dataproc as priv SA |
+| 29 | gkeCluster | `container.clusters.create` + `actAs` | Create GKE cluster as priv SA |
+| 30 | notebooksInstances | `notebooks.instances.create` + `actAs` | Create Vertex AI notebook |
+| 31 | workflows | `workflows.workflows.create` + `actAs` | Create workflow as priv SA |
 
-Whenever you want to remove all of the IAM Vulnerable-created resources, you can run these commands:
-1. `cd iam-vulnerable/`
-1. `terraform destroy`
+# Cost Information
 
-**Alternative Cleanup (When Terraform State is Lost)**
+## AWS Cost
 
-In a case where you have deployed iam-vulnerable using Terraform but no longer have access to the state file (and `terraform destroy` does not work), you can use the following cleanup scripts:
+| Module | Default | Cost | Required For |
+|--------|---------|------|--------------|
+| privesc-paths | Enabled | **Free** | All IAM paths |
+| tool-testing | Enabled | **Free** | Tool validation |
+| EC2 | Disabled | ~$4.50/mo | SSM, EC2 Instance Connect |
+| Lambda | Disabled | Free tier | Lambda code editing |
+| Glue | Disabled | ~$4/hr | Glue endpoint update |
+| SageMaker | Disabled | Varies | SageMaker presigned URL |
+| CloudFormation | Disabled | ~$0.40/mo | CF stack update |
+
+## GCP Cost
+
+| Module | Default | Cost | Required For |
+|--------|---------|------|--------------|
+| privesc-paths | Enabled | **Free** | All IAM paths |
+| tool-testing | Enabled | **Free** | Tool validation |
+| Compute | Disabled | ~$5/mo | setMetadata, osLogin |
+| Cloud Functions | Disabled | Free tier | updateFunction |
+| Cloud Run | Disabled | Free tier | actAs-cloudrun |
+
+# Tool Testing
+
+Both AWS and GCP modules include test cases to validate detection tools:
+
+**False Negative Tests** - Paths that SHOULD be detected:
+- Exploitable conditions that appear restrictive but aren't
+- Indirect access via groups
+- Multi-hop escalation chains
+
+**False Positive Tests** - Paths that should NOT be flagged:
+- Truly restrictive conditions
+- Explicit deny policies
+- Scope-limited permissions
+- No viable targets
+
+Test your tools:
+```bash
+# AWS
+cd aws && terraform apply
+pmapper graph create
+pmapper analysis
+
+# GCP
+cd gcp && terraform apply
+foxmapper gcp graph create --project YOUR_PROJECT
+foxmapper gcp argquery --preset privesc --project YOUR_PROJECT
+```
+
+# Cleanup
+
+## AWS Cleanup
 
 ```bash
-# Python version (requires boto3)
-./cleanup-scripts/cleanup_iam_vulnerable.py --dry-run
-
-# Bash version (requires AWS CLI and jq)  
-./cleanup-scripts/cleanup_iam_vulnerable.sh --dry-run
+cd aws
+terraform destroy
 ```
 
-These scripts will:
-- Automatically identify all IAM Vulnerable resources in your AWS account
-- Show you exactly what will be deleted before proceeding
-- Delete resources in the proper order to avoid dependency conflicts
-- Support AWS profiles and provide detailed logging
-
-**Important**: Always run with `--dry-run` first to see what would be deleted. See `cleanup-scripts/CLEANUP_README.md` for detailed usage instructions.
-
-
-## What resources were just created?
-
-The Terraform binary just used your default AWS account profile credentials to create:
-* **31 users, roles, and policies** each with a unique exploit path to administrative access of the playground account
-* Some additional users, groups, roles, and policies that are required to fully realize certain exploit paths
-* Some additional users, roles, and policies that test the detection capabilities of other tools
-
-By default, every role created by this Terraform module is assumable by the user or role you used to run Terraform.
-* If you'd like Terraform to use a profile other than the default profile, or you'd like to hard-code the `assume_role_policy` ARN, see [Other Use Cases](#other-use-cases).
-
-## How much is this going to cost?
-Deploying IAM vulnerable in its **default configuration will cost nothing**. See the next section to learn how to enable non-default modules that do incur cost, and how much each module will cost per month if you deploy it.
-
-# A Modular Approach
-
-IAM Vulnerable groups certain resources together in modules. Some of the modules are enabled by default (the ones that don't have any cost implications), and others are disabled by default (the ones that incur cost if deployed). This way, you can enable specific modules as needed.
-
-For example, when you are ready to play with the exploit paths like `ssm:StartSession` that involve resources outside of IAM, you can deploy and tear down these resources on demand by uncommenting the module in the `iam-vulnerable/main.tf` file, and re-running `terraform apply`:
-
+If Terraform state is lost:
+```bash
+cd aws/cleanup-scripts
+./cleanup_iam_vulnerable.sh --dry-run  # Preview
+./cleanup_iam_vulnerable.sh            # Execute
 ```
-# Uncomment the next four lines to create an ec2 instance and related resources
-#module "ec2" {
-#  source = "./modules/non-free-resources/ec2"
-#  aws_assume_role_arn = (var.aws_assume_role_arn != "" ? var.aws_assume_role_arn : data.aws_caller_identity.current.arn)
-#}
+
+## GCP Cleanup
+
+```bash
+cd gcp
+terraform destroy
 ```
-After you uncomment the `ec2` module, run:
 
-```
-terraform init
-terraform apply
-```
-You have now deployed the required components to try the SSM privesc paths.
-
-
-## Free Resource Modules
-
-There is no cost to anything deployed within `free-resources`:
-
-| Name | Default Status | Estimated Cost | Description |
-| --- | --- | --- | --- |
-| privesc-paths  | Enabled | None | Contains all of the IAM privesc paths |
-| tool-testing  | Enabled | None | Contains test cases that evaluate the capabilities of the different IAM privesc tools |
-
-## Non-free Resource Modules
-
-Deploying these additional modules can result in cost:
-
-| Name | Default Status | Estimated Cost | Description | Required for |
-| --- | --- | --- | --- | --- |
-| EC2  | Disabled | :heavy_dollar_sign: <br> $4.50/month | Creates an EC2 instance and a security group that allows SSH from anywhere | `ssm-SendCommand` <br> `ssm-StartSession` <br> `ec2InstanceConnect-SendSSHPublicKey` |
-| Lambda | Disabled | :slightly_smiling_face: <br> Monthly cost depends on usage (cost should be zero) | Creates a Lambda function  | `Lambda-EditExistingLambdaFunctionWithRole` |
-| Glue | Disabled | :heavy_dollar_sign::heavy_dollar_sign::heavy_dollar_sign::heavy_dollar_sign: <br> $4/hour | Creates a Glue dev endpoint | `Glue-UpdateExistingGlueDevEndpoint` |
-| SageMaker | Disabled | Not sure yet | Creates a SageMaker notebook | `sageMakerCreatePresignedNotebookURL` |
-| CloudFormation | Disabled |  :slightly_smiling_face: <br> $0.40/month for the secret created via CloudFormation. Nothing or barely nothing for the stack itself	| Creates a CloudFormation stack that creates a secret in secret manager | `privesc-cloudFormationUpdateStack` |
-
-
-
-# Supported Privilege Escalation Paths
-
-| Path Name | IAM Vulnerable Profile Name | Non-Default Modules Required | Exploitation References |
-| --- | --- | --- | --- |
-| **Category: IAM Permissions on Other Users** |   |   |   |
-| IAM-CreateAccessKey | privesc4  | None  | :fox_face: [Well, That Escalated Quickly - Privesc 04](https://labs.bishopfox.com/tech-blog/privilege-escalation-in-aws) <br> :lock: [s3cur3.it IAMVulnerable - Part 3](https://s3cur3.it/home/practicing-aws-security-with-iamvulnerable-part-3) |
-| IAM-CreateLoginProfile | privesc5  | None  | :fox_face: [Well, That Escalated Quickly - Privesc 05](https://labs.bishopfox.com/tech-blog/privilege-escalation-in-aws) <br> :lock: [s3cur3.it IAMVulnerable - Part 3](https://s3cur3.it/home/practicing-aws-security-with-iamvulnerable-part-3)  |
-| IAM-UpdateLoginProfile | privesc6  | None  | :fox_face: [Well, That Escalated Quickly - Privesc 06](https://labs.bishopfox.com/tech-blog/privilege-escalation-in-aws) <br> :lock: [s3cur3.it IAMVulnerable - Part 3](https://s3cur3.it/home/practicing-aws-security-with-iamvulnerable-part-3)  |
-| **Category: PassRole to Service** |   |  |   |
-| CloudFormation-PassExistingRoleToCloudFormation | privesc20  | None  |:fox_face: [Well, That Escalated Quickly - Privesc 20](https://labs.bishopfox.com/tech-blog/privilege-escalation-in-aws)   |
-| CodeBuild-CreateProjectPassRole| privesc-codeBuildProject  | None  |   |
-| DataPipeline-PassExistingRoleToNewDataPipeline| privesc21  | None  | :fox_face: [Well, That Escalated Quickly - Privesc 21](https://labs.bishopfox.com/tech-blog/privilege-escalation-in-aws)  |
-| EC2-CreateInstanceWithExistingProfile| privesc3  | None  | :fox_face: [Well, That Escalated Quickly - Privesc 03](https://labs.bishopfox.com/tech-blog/privilege-escalation-in-aws) <br> :lock: [s3cur3.it IAMVulnerable - Part 2](https://s3cur3.it/home/practicing-aws-security-with-iamvulnerable-part-2) |
-| Glue-PassExistingRoleToNewGlueDevEndpoint | privesc18  | None  | :fox_face: [Well, That Escalated Quickly - Privesc 18](https://labs.bishopfox.com/tech-blog/privilege-escalation-in-aws)  |
-| Lambda-PassExistingRoleToNewLambdaThenInvoke | privesc15  |  None | :fox_face: [Well, That Escalated Quickly - Privesc 15](https://labs.bishopfox.com/tech-blog/privilege-escalation-in-aws)   |
-| Lambda-PassRoleToNewLambdaThenTrigger | privesc16  |  None | :fox_face: [Well, That Escalated Quickly - Privesc 16](https://labs.bishopfox.com/tech-blog/privilege-escalation-in-aws)  |
-| SageMaker-CreateNotebookPassRole |  privesc-sageNotebook | None  | :rhinoceros: [AWS IAM Privilege Escalation - Method 2](https://rhinosecuritylabs.com/aws/aws-privilege-escalation-methods-mitigation-part-2/)  |
-| SageMaker-CreateTrainingJobPassRole | privesc-sageTraining  |  None  |   |
-| SageMaker-CreateProcessingJobPassRole |  privesc-sageProcessing | None   | |
-| **Category: Permissions on Policies** |    |   |
-| IAM-AddUserToGroup | privesc13  |  None  |:fox_face: [Well, That Escalated Quickly - Privesc 13](https://labs.bishopfox.com/tech-blog/privilege-escalation-in-aws)   |
-| IAM-AttachGroupPolicy| privesc8  | None   | :fox_face: [Well, That Escalated Quickly - Privesc 08](https://labs.bishopfox.com/tech-blog/privilege-escalation-in-aws)  |
-| IAM-AttachRolePolicy| privesc9  | None   | :fox_face: [Well, That Escalated Quickly - Privesc 09](https://labs.bishopfox.com/tech-blog/privilege-escalation-in-aws)  |
-| IAM-AttachUserPolicy| privesc7  | None   | :fox_face:  [Well, That Escalated Quickly - Privesc 07](https://labs.bishopfox.com/tech-blog/privilege-escalation-in-aws)  |
-| IAM-CreateNewPolicyVersion| privesc1  |  None | :fox_face: [Well, That Escalated Quickly - Privesc 01](https://labs.bishopfox.com/tech-blog/privilege-escalation-in-aws) <br> :lock: [s3cur3.it IAMVulnerable - Part 1](https://s3cur3.it/home/practicing-aws-security-with-iamvulnerable) |
-| IAM-PutGroupPolicy | privesc11  | None  | :fox_face: [Well, That Escalated Quickly - Privesc 11](https://labs.bishopfox.com/tech-blog/privilege-escalation-in-aws)  |
-| IAM-PutRolePolicy | privesc12  | None | :fox_face:  [Well, That Escalated Quickly - Privesc 12](https://labs.bishopfox.com/tech-blog/privilege-escalation-in-aws) |
-| IAM-PutUserPolicy | privesc10  | None   | :fox_face: [Well, That Escalated Quickly - Privesc 10](https://labs.bishopfox.com/tech-blog/privilege-escalation-in-aws)  |
-| IAM-SetExistingDefaultPolicyVersion | privesc2  | None  |  :fox_face: [Well, That Escalated Quickly - Privesc 02](https://labs.bishopfox.com/tech-blog/privilege-escalation-in-aws) <br> :lock: [s3cur3.it IAMVulnerable - Part 2](https://s3cur3.it/home/practicing-aws-security-with-iamvulnerable-part-2)|
-| **Category: Privilege Escalation using AWS Services**|    |   |   |
-| EC2InstanceConnect-SendSSHPublicKey | privesc-instanceConnect  |  EC2  | 🔑 [AWS IAM privilege escalation paths](https://pswalia2u.medium.com/aws-iam-privilege-escalation-paths-cba36be1aa9e) |
-| CloudFormation-UpdateStack | privesc-cfUpdateStack | CloudFormation | 🔑 [AWS IAM privilege escalation paths](https://pswalia2u.medium.com/aws-iam-privilege-escalation-paths-cba36be1aa9e) |
-| Glue-UpdateExistingGlueDevEndpoint| privesc19  |  Glue | :fox_face: [Well, That Escalated Quickly - Privesc 19](https://labs.bishopfox.com/tech-blog/privilege-escalation-in-aws)  |
-| Lambda-EditExistingLambdaFunctionWithRole| privesc17  |  Lambda  | :fox_face: [Well, That Escalated Quickly - Privesc 17](https://labs.bishopfox.com/tech-blog/privilege-escalation-in-aws) <br> :lock: [s3cur3.it IAMVulnerable - Part 4](https://s3cur3.it/home/practicing-aws-security-with-iamvulnerable-part-4)  |
-| SageMakerCreatePresignedNotebookURL | privesc-sageUpdateURL | Sagemaker | :rhinoceros: [AWS IAM Privilege Escalation - Method 3](https://rhinosecuritylabs.com/aws/aws-privilege-escalation-methods-mitigation-part-2/) |
-| SSM-SendCommand| privesc-ssm-command  |  EC2  | 🔑 [AWS IAM privilege escalation paths](https://pswalia2u.medium.com/aws-iam-privilege-escalation-paths-cba36be1aa9e) |
-| SSM-StartSession | privesc-ssm-session  |  EC2  | 🔑 [AWS IAM privilege escalation paths](https://pswalia2u.medium.com/aws-iam-privilege-escalation-paths-cba36be1aa9e) |
-| STS-AssumeRole | privesc-assumerole  | None   | 🔑 [AWS IAM privilege escalation paths](https://pswalia2u.medium.com/aws-iam-privilege-escalation-paths-cba36be1aa9e) |
-| **Category: Updating an AssumeRole Policy** |   |   |   |
-| IAM-UpdatingAssumeRolePolicy |  privesc14 | None  | :fox_face: [Well, That Escalated Quickly - Privesc 14](https://labs.bishopfox.com/tech-blog/privilege-escalation-in-aws)   |
-
-
-
-# Other Use Cases
-
-#### Default - No `terraform.tfvars` configured
-* Deploy using your default AWS profile (Default)
-* All created roles are assumable by the principal used to run Terraform (specified in your default profile)
-
-#### Use a profile other than the default to run Terraform
-* Copy `terraform.tfvars.example` to `terraform.tvvars`
-* Uncomment the line `#aws_local_profile = "profile_name"` and enter the profile name you'd like to use
-* If you are using a non-default profile, and still want to use the `aws_credentails_file_example` file, you can use this command to generate an AWS credentials file that works with your non-default profile name (Thanks @scriptingislife)
-   * Remember to replace `nondefaultuser` with the profile name you are using): 
-   * `tail -n +7 aws_credentials_file_example | sed -e "s/111111111111/$(aws sts get-caller-identity | grep Account | awk -F\" '{print $4}')/g;s/default/nondefaultuser/g" >> ~/.aws/credentials`
- 
-
-#### Use an ARN other than the caller as the principal that can assume the newly created roles
-
-* Copy `terraform.tfvars.example` to `terraform.tvvars`
-* Uncomment the line `#aws_assume_role_arn = "arn:aws:iam::112233445566:user/you"` and enter the ARN you'd like to use
-
-Once created, each of the privesc roles will be assumable by the principal (ARN) you specified.
-
-#### Create the resource in account X, but use an ARN from account Y as the principal that can assume the newly created roles
-
-If you have configured AWS CLI profiles that assume roles into other accounts, you will want to specify the profile name AND manually specify the ARN you'd like to use to assume into the different roles.
-
-In the example below, the resources will be created in the account that is tied to `"prod-cross-org-access-role"`, but each role that Terraform creates can be accessed by `"arn:aws:iam::112233445566:user/you"`, which belongs to another account.
-
-```
-aws_local_profile = "prod-cross-org-access-role"
-aws_assume_role_arn = "arn:aws:iam::112233445566:user/you"
+If Terraform state is lost:
+```bash
+cd gcp/cleanup-scripts
+./cleanup_iam_vulnerable.sh --project YOUR_PROJECT --dry-run  # Preview
+./cleanup_iam_vulnerable.sh --project YOUR_PROJECT            # Execute
 ```
 
 # FAQ
 
-### How does IAM Vulnerable compare to [CloudGoat](https://github.com/RhinoSecurityLabs/cloudgoat/), [Terragoat](https://github.com/bridgecrewio/terragoat), and [SadCloud](https://github.com/nccgroup/sadcloud)?
+### How does IAM Vulnerable compare to CloudGoat, Terragoat, and SadCloud?
 
-All of these tools use Terraform to deploy intentionally vulnerable infrastructure to AWS. However, **IAM Vulnerable's focus is IAM privilege escalation**, whereas the other tools either don't cover IAM privesc or only cover some scenarios.  
+All of these tools use Terraform to deploy intentionally vulnerable infrastructure. However, **IAM Vulnerable's focus is IAM privilege escalation**, whereas the other tools either don't cover IAM privesc or only cover some scenarios.
 
-* [CloudGoat](https://github.com/RhinoSecurityLabs/cloudgoat/) deploys eight unique scenarios, some of which cover IAM privesc paths, while others focus on other areas like secrets in EC2 metadata.
-* [Terragoat](https://github.com/bridgecrewio/terragoat) and [SadCloud](https://github.com/nccgroup/sadcloud) both focus on the many ways you can misconfigure your cloud accounts, but do not cover IAM privesc paths. In fact, you can almost think of IAM vulnerable as a missing puzzle piece when applied along side Terragoat or SadCloud. The intentionally vulnerable configurations complement each other.
+### Can I run AWS and GCP simultaneously?
 
-### How does IAM Vulnerable compare to [Cloudsplaining](https://github.com/salesforce/cloudsplaining/), [AWSPX](https://github.com/FSecureLABS/awspx), [Principal Mapper](https://github.com/nccgroup/PMapper), [Pacu](https://github.com/RhinoSecurityLabs/pacu), [Cloudmapper](https://github.com/duo-labs/cloudmapper), or [ScouteSuite](https://github.com/nccgroup/ScoutSuite)?
+Yes! Each cloud platform has its own directory with separate Terraform state. Deploy both for a comprehensive multi-cloud privilege escalation lab.
 
-All of these tools help identify existing misconfigurations in your AWS environment. Some, like Pacu, also help you exploit misconfigurations. In contrast, IAM Vulnerable **creates** intentionally vulnerable infrastructure. If you really want to learn how to use tools like Principal Mapper (PMapper), AWSPX, Pacu, and Cloudsplaining, IAM Vulnerable is for you.
+### I'm new to Terraform. Is this safe?
 
+Yes, if you follow these guidelines:
+- Use an isolated test account/project with no production resources
+- Run `terraform plan` first to preview changes
+- Use `terraform destroy` to clean up
+- Check out [Infracost](https://www.infracost.io/) to estimate costs before deploying
 
-### I've never used Terraform and I'm afraid of it. Help!?
+### What tools can I use to practice?
 
-I was also afraid of Terraform and projects that would create resources in my account before I knew how Terraform worked. Here are some things that might ease your anxiety:
-   * By using an AWS account for this single purpose, you can rest assured that this repository won't negatively impact anything else you care about. Even if you deploy IAM Vulnerable to a separate account in an AWS organization, you can rest assured that the other accounts in the org will be outside the blast radius of this playground account.
-   * The `terraform plan` command is a dry run. It shows you exactly what will be deployed if you run `terraform apply` before you actually run it.
-   * Rest assured knowing that you can `terraform destroy` anything you `terraform apply` for a clean slate.
-   * If your concern is cost, check out [Infracost](https://www.infracost.io/docs/). You download this binary, register for a free API key, and execute it within a Terraform directory like `iam-vulnerable`. This tool runs `terraform plan` and calculates the monthly cost associated with the plan as it is currently configured. This is the tool I used to populate the [module cost estimates table above](#non-free-resource-modules).
+**AWS:**
+- [Cloudsplaining](https://github.com/salesforce/cloudsplaining/)
+- [AWSPX](https://github.com/FSecureLABS/awspx)
+- [Principal Mapper (PMapper)](https://github.com/nccgroup/PMapper)
+- [Pacu](https://github.com/RhinoSecurityLabs/pacu)
+- [FoxMapper](https://github.com/BishopFox/foxmapper)
 
-### Can I run this tool and another tool like [CloudGoat](https://github.com/RhinoSecurityLabs/cloudgoat/), [Terragoat](https://github.com/bridgecrewio/terragoat), or [SadCloud](https://github.com/nccgroup/sadcloud) in the same AWS account?
+**GCP:**
+- [FoxMapper](https://github.com/BishopFox/foxmapper)
+- [gcpwn](https://github.com/NetSPI/gcpwn)
 
-Yes. Each tool will keep its Terraform state separately, but all resources will be created, updated, and deleted in the same account, and they can coexist.
+# Prior Work and References
 
-# Prior work and good references
-
-* https://github.com/RhinoSecurityLabs/AWS-IAM-Privilege-Escalation
 * https://rhinosecuritylabs.com/aws/aws-privilege-escalation-methods-mitigation/
 * https://rhinosecuritylabs.com/aws/aws-privilege-escalation-methods-mitigation-part-2/
 * https://labs.bishopfox.com/tech-blog/privilege-escalation-in-aws
-* https://ermetic.com/whats-new/blog/aws/auditing-passrole-a-problematic-privilege-escalation-permission/
+* https://about.gitlab.com/blog/2020/02/12/plundering-gcp-escalating-privileges-in-google-cloud-platform/
+* https://cloud.google.com/iam/docs/understanding-roles

@@ -1,0 +1,23 @@
+# GCP IAM Vulnerable - Example Configuration
+#
+# Copy this file to terraform.tfvars and fill in your values:
+#   cp terraform.tfvars.example terraform.tfvars
+#
+# WARNING: Only deploy to isolated test projects with no sensitive data!
+
+# Required: Your GCP project ID
+gcp_project_id = "your-test-project-id"
+
+# Optional: GCP region (default: us-central1)
+# gcp_region = "us-central1"
+
+# Optional: GCP zone for compute resources (default: us-central1-a)
+# gcp_zone = "us-central1-a"
+
+# Optional: IAM member to grant access to vulnerable resources
+# If not specified, defaults to the user running Terraform
+# Format: "user:email@example.com" or "serviceAccount:sa@project.iam.gserviceaccount.com"
+# attacker_member = "user:attacker@example.com"
+
+# Optional: Prefix for resource names (default: privesc)
+# resource_prefix = "privesc"
