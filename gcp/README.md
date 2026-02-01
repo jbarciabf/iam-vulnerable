@@ -61,41 +61,74 @@ gcp_region = "us-central1"
 
 ### Free Resources (Default)
 
-**31 Privilege Escalation Paths:**
+**43 Privilege Escalation Scenarios** grouped by GCP service:
 
-| # | Name | Vulnerable Permission | Attack Vector |
-|---|------|----------------------|---------------|
-| 1 | setIamPolicy-project | `resourcemanager.projects.setIamPolicy` | Modify project IAM to grant Owner |
-| 2 | createServiceAccountKey | `iam.serviceAccountKeys.create` | Create key for privileged SA |
-| 3 | setIamPolicy-serviceAccount | `iam.serviceAccounts.setIamPolicy` | Grant self impersonation rights |
-| 4 | actAs-compute | `actAs` + `compute.instances.create` | Create VM with privileged SA |
-| 5 | actAs-cloudfunction | `actAs` + `cloudfunctions.functions.create` | Deploy function as privileged SA |
-| 6 | actAs-cloudrun | `actAs` + `run.services.create` | Deploy Cloud Run as privileged SA |
-| 7 | actAs-cloudbuild | `actAs` + `cloudbuild.builds.create` | Run build as privileged SA |
-| 8 | getAccessToken | `iam.serviceAccounts.getAccessToken` | Generate access token directly |
-| 9 | signBlob | `iam.serviceAccounts.signBlob` | Sign data for token forgery |
-| 10 | signJwt | `iam.serviceAccounts.signJwt` | Sign JWT for token forgery |
-| 11 | updateRole | `iam.roles.update` | Add permissions to held role |
-| 12 | setMetadata-compute | `compute.instances.setMetadata` | Add SSH key to instances |
-| 13 | osLogin | `compute.instances.osAdminLogin` | SSH via OS Login |
-| 14 | setIamPolicy-bucket | `storage.buckets.setIamPolicy` | Grant bucket access |
-| 15 | updateFunction | `cloudfunctions.functions.update` | Modify function code |
-| 16 | explicitDeny-bypass | SA chaining | Bypass deny via impersonation |
-| 17 | deploymentManager | `deploymentmanager.deployments.create` | Deploy infra as privileged SA |
-| 18 | composer | `composer.environments.create` | Create Airflow as privileged SA |
-| 19 | dataflow | `dataflow.jobs.create` | Run Dataflow as privileged SA |
-| 20 | secretManager | `secretmanager.versions.access` | Access stored secrets |
-| 21 | setIamPolicy-pubsub | `pubsub.topics.setIamPolicy` | Modify Pub/Sub access |
-| 22 | cloudScheduler | `cloudscheduler.jobs.create` | Schedule tasks with SA identity |
-| 23 | implicitDelegation | `iam.serviceAccounts.implicitDelegation` | Multi-hop impersonation chain |
-| 24 | getOpenIdToken | `iam.serviceAccounts.getOpenIdToken` | Generate OIDC tokens for services |
-| 25 | setServiceAccount | `compute.instances.setServiceAccount` | Change VM's service account |
-| 26 | instanceTemplates | `compute.instanceTemplates.create` | Create templates with priv SA |
-| 27 | runJobsCreate | `run.jobs.create` + `actAs` | Create Cloud Run job as priv SA |
-| 28 | dataprocClusters | `dataproc.clusters.create` + `actAs` | Create Dataproc as priv SA |
-| 29 | gkeCluster | `container.clusters.create` + `actAs` | Create GKE cluster as priv SA |
-| 30 | notebooksInstances | `notebooks.instances.create` + `actAs` | Create Vertex AI notebook |
-| 31 | workflows | `workflows.workflows.create` + `actAs` | Create workflow as priv SA |
+| # | Scenario | Permission(s) | Status |
+|---|----------|---------------|--------|
+| **IAM Service Account** | | | |
+| 1 | setIamPolicy-project | `resourcemanager.projects.setIamPolicy` | ✅ |
+| 2 | createServiceAccountKey | `iam.serviceAccountKeys.create` | ✅ |
+| 3 | setIamPolicy-serviceAccount | `iam.serviceAccounts.setIamPolicy` | ✅ |
+| 4 | getAccessToken | `iam.serviceAccounts.getAccessToken` | ✅ |
+| 5 | signBlob | `iam.serviceAccounts.signBlob` | ✅ |
+| 6 | signJwt | `iam.serviceAccounts.signJwt` | ✅ |
+| 7 | implicitDelegation | `iam.serviceAccounts.implicitDelegation` | ✅ |
+| 8 | getOpenIdToken | `iam.serviceAccounts.getOpenIdToken` | ✅ |
+| 9 | updateRole | `iam.roles.update` | ✅ |
+| **Compute Engine** | | | |
+| 10 | actAs-compute | `actAs` + `compute.instances.create` | ✅ |
+| 11 | setMetadata-compute | `compute.instances.setMetadata` | ✅ |
+| 12 | osLogin | `compute.instances.osAdminLogin` | ✅ |
+| 13 | setServiceAccount | `compute.instances.setServiceAccount` | ✅ |
+| 14 | instanceTemplates.create | `compute.instanceTemplates.create` | ✅ |
+| **Cloud Functions** | | | |
+| 15 | actAs-cloudfunction | `actAs` + `cloudfunctions.functions.create` | ✅ |
+| 16 | updateFunction | `cloudfunctions.functions.update` | ✅ |
+| 17 | sourceCodeSet | `cloudfunctions.functions.sourceCodeSet` | ✅ |
+| **Cloud Run** | | | |
+| 18 | actAs-cloudrun | `actAs` + `run.services.create` | ✅ |
+| 19 | run.services.update | `run.services.update` | ✅ |
+| 20 | run.jobs.create | `run.jobs.create` + `actAs` | ✅ |
+| **Cloud Build** | | | |
+| 21 | actAs-cloudbuild | `actAs` + `cloudbuild.builds.create` | ✅ |
+| 22 | cloudbuild.triggers.create | `cloudbuild.builds.create` via trigger | ✅ |
+| **Storage** | | | |
+| 23 | setIamPolicy-bucket | `storage.buckets.setIamPolicy` | ✅ |
+| 24 | storage.objects.create | Write to sensitive bucket | ✅ |
+| **Secret Manager** | | | |
+| 25 | secretManager | `secretmanager.versions.access` | ✅ |
+| 26 | secretManager.setIamPolicy | `secretmanager.secrets.setIamPolicy` | ✅ |
+| **Pub/Sub** | | | |
+| 27 | setIamPolicy-pubsub | `pubsub.topics.setIamPolicy` | ✅ |
+| **Cloud Scheduler** | | | |
+| 28 | cloudScheduler | `cloudscheduler.jobs.create` | ✅ |
+| **Deployment Manager** | | | |
+| 29 | deploymentManager | `deploymentmanager.deployments.create` | ✅ |
+| **Composer** | | | |
+| 30 | composer | `composer.environments.create` | ✅ |
+| **Dataflow** | | | |
+| 31 | dataflow | `dataflow.jobs.create` | ✅ |
+| **Dataproc** | | | |
+| 32 | dataproc.clusters.create | `dataproc.clusters.create` + `actAs` | ✅ |
+| 33 | dataproc.jobs.create | `dataproc.jobs.create` | ✅ |
+| **GKE/Kubernetes** | | | |
+| 34 | container.clusters.create | `container.clusters.create` + `actAs` | ✅ |
+| 35 | container.clusters.getCredentials | Access GKE cluster | ✅ |
+| **Vertex AI / AI Platform** | | | |
+| 36 | notebooks.instances.create | `notebooks.instances.create` + `actAs` | ✅ |
+| 37 | aiplatform.customJobs.create | `aiplatform.customJobs.create` | ✅ |
+| **Cloud Workflows** | | | |
+| 38 | workflows.workflows.create | `workflows.workflows.create` + `actAs` | ✅ |
+| **Eventarc** | | | |
+| 39 | eventarc.triggers.create | `eventarc.triggers.create` | ✅ |
+| **BigQuery** | | | |
+| 40 | bigquery.datasets.setIamPolicy | `bigquery.datasets.setIamPolicy` | ✅ |
+| **Workload Identity** | | | |
+| 41 | workloadIdentityPoolProviders | Federation abuse | ✅ |
+| **Org Policy** | | | |
+| 42 | orgpolicy.policy.set | `orgpolicy.policy.set` | ✅ |
+| **Deny Bypass** | | | |
+| 43 | explicitDeny-bypass | SA chaining | ✅ |
 
 **Tool Testing Resources:**
 - False Negative tests (should be detected)
@@ -138,7 +171,7 @@ terraform apply -var="enable_compute=true" -var="enable_cloud_functions=true"
 
 | Configuration | Cost/Hour | Cost/Month |
 |---------------|-----------|------------|
-| **Default (31 IAM paths only)** | **$0.00** | **$0** |
+| **Default (43 IAM paths only)** | **$0.00** | **$0** |
 | + Compute module (preemptible) | +$0.002 | +$2-3 |
 | + Compute module (standard) | +$0.008 | +$6-7 |
 | + Cloud Functions (idle) | +$0.00 | Free tier |
@@ -1196,37 +1229,70 @@ gcloud workflows delete evil-workflow --location=us-central1 --quiet
 | Path | Service Account Email |
 |------|----------------------|
 | Target (high-priv) | `privesc-high-priv-sa@PROJECT_ID.iam.gserviceaccount.com` |
+| **IAM Service Account** | |
 | 1 | `privesc1-set-iam-policy@PROJECT_ID.iam.gserviceaccount.com` |
-| 2 | `privesc2-create-sa-key@PROJECT_ID.iam.gserviceaccount.com` |
-| 3 | `privesc3-set-iam-policy-sa@PROJECT_ID.iam.gserviceaccount.com` |
-| 4 | `privesc4-actas-compute@PROJECT_ID.iam.gserviceaccount.com` |
-| 5 | `privesc5-actas-function@PROJECT_ID.iam.gserviceaccount.com` |
-| 6 | `privesc6-actas-run@PROJECT_ID.iam.gserviceaccount.com` |
-| 7 | `privesc7-actas-build@PROJECT_ID.iam.gserviceaccount.com` |
-| 8 | `privesc8-get-access-token@PROJECT_ID.iam.gserviceaccount.com` |
-| 9 | `privesc9-sign-blob@PROJECT_ID.iam.gserviceaccount.com` |
-| 10 | `privesc10-sign-jwt@PROJECT_ID.iam.gserviceaccount.com` |
-| 11 | `privesc11-update-role@PROJECT_ID.iam.gserviceaccount.com` |
-| 12 | `privesc12-set-metadata@PROJECT_ID.iam.gserviceaccount.com` |
-| 13 | `privesc13-os-login@PROJECT_ID.iam.gserviceaccount.com` |
-| 14 | `privesc14-bucket-iam@PROJECT_ID.iam.gserviceaccount.com` |
-| 15 | `privesc15-update-function@PROJECT_ID.iam.gserviceaccount.com` |
-| 16 | `privesc16-deny-bypass@PROJECT_ID.iam.gserviceaccount.com` |
-| 17 | `privesc17-deployment-mgr@PROJECT_ID.iam.gserviceaccount.com` |
-| 18 | `privesc18-composer@PROJECT_ID.iam.gserviceaccount.com` |
-| 19 | `privesc19-dataflow@PROJECT_ID.iam.gserviceaccount.com` |
-| 20 | `privesc20-secret-access@PROJECT_ID.iam.gserviceaccount.com` |
-| 21 | `privesc21-pubsub-iam@PROJECT_ID.iam.gserviceaccount.com` |
-| 22 | `privesc22-scheduler@PROJECT_ID.iam.gserviceaccount.com` |
-| 23 | `privesc23-implicit-deleg@PROJECT_ID.iam.gserviceaccount.com` |
-| 24 | `privesc24-get-oidc-token@PROJECT_ID.iam.gserviceaccount.com` |
-| 25 | `privesc25-set-sa@PROJECT_ID.iam.gserviceaccount.com` |
-| 26 | `privesc26-inst-templates@PROJECT_ID.iam.gserviceaccount.com` |
-| 27 | `privesc27-run-jobs@PROJECT_ID.iam.gserviceaccount.com` |
-| 28 | `privesc28-dataproc@PROJECT_ID.iam.gserviceaccount.com` |
-| 29 | `privesc29-gke-cluster@PROJECT_ID.iam.gserviceaccount.com` |
-| 30 | `privesc30-notebooks@PROJECT_ID.iam.gserviceaccount.com` |
-| 31 | `privesc31-workflows@PROJECT_ID.iam.gserviceaccount.com` |
+| 2 | `privesc2-create-key@PROJECT_ID.iam.gserviceaccount.com` |
+| 3 | `privesc3-set-sa-iam@PROJECT_ID.iam.gserviceaccount.com` |
+| 4 | `privesc4-get-access-token@PROJECT_ID.iam.gserviceaccount.com` |
+| 5 | `privesc5-sign-blob@PROJECT_ID.iam.gserviceaccount.com` |
+| 6 | `privesc6-sign-jwt@PROJECT_ID.iam.gserviceaccount.com` |
+| 7 | `privesc7-implicit-delegation@PROJECT_ID.iam.gserviceaccount.com` |
+| 8 | `privesc8-get-oidc-token@PROJECT_ID.iam.gserviceaccount.com` |
+| 9 | `privesc9-update-role@PROJECT_ID.iam.gserviceaccount.com` |
+| **Compute Engine** | |
+| 10 | `privesc10-actas-compute@PROJECT_ID.iam.gserviceaccount.com` |
+| 11 | `privesc11-set-metadata@PROJECT_ID.iam.gserviceaccount.com` |
+| 12 | `privesc12-os-login@PROJECT_ID.iam.gserviceaccount.com` |
+| 13 | `privesc13-set-sa@PROJECT_ID.iam.gserviceaccount.com` |
+| 14 | `privesc14-inst-templates@PROJECT_ID.iam.gserviceaccount.com` |
+| **Cloud Functions** | |
+| 15 | `privesc15-actas-function@PROJECT_ID.iam.gserviceaccount.com` |
+| 16 | `privesc16-update-function@PROJECT_ID.iam.gserviceaccount.com` |
+| 17 | `privesc17-sourcecode-set@PROJECT_ID.iam.gserviceaccount.com` |
+| **Cloud Run** | |
+| 18 | `privesc18-actas-cloudrun@PROJECT_ID.iam.gserviceaccount.com` |
+| 19 | `privesc19-run-update@PROJECT_ID.iam.gserviceaccount.com` |
+| 20 | `privesc20-run-jobs@PROJECT_ID.iam.gserviceaccount.com` |
+| **Cloud Build** | |
+| 21 | `privesc21-actas-cloudbuild@PROJECT_ID.iam.gserviceaccount.com` |
+| 22 | `privesc22-build-triggers@PROJECT_ID.iam.gserviceaccount.com` |
+| **Storage** | |
+| 23 | `privesc23-bucket-iam@PROJECT_ID.iam.gserviceaccount.com` |
+| 24 | `privesc24-storage-write@PROJECT_ID.iam.gserviceaccount.com` |
+| **Secret Manager** | |
+| 25 | `privesc25-secret-access@PROJECT_ID.iam.gserviceaccount.com` |
+| 26 | `privesc26-secret-setiam@PROJECT_ID.iam.gserviceaccount.com` |
+| **Pub/Sub** | |
+| 27 | `privesc27-pubsub-iam@PROJECT_ID.iam.gserviceaccount.com` |
+| **Cloud Scheduler** | |
+| 28 | `privesc28-scheduler@PROJECT_ID.iam.gserviceaccount.com` |
+| **Deployment Manager** | |
+| 29 | `privesc29-deployment-mgr@PROJECT_ID.iam.gserviceaccount.com` |
+| **Composer** | |
+| 30 | `privesc30-composer@PROJECT_ID.iam.gserviceaccount.com` |
+| **Dataflow** | |
+| 31 | `privesc31-dataflow@PROJECT_ID.iam.gserviceaccount.com` |
+| **Dataproc** | |
+| 32 | `privesc32-dataproc@PROJECT_ID.iam.gserviceaccount.com` |
+| 33 | `privesc33-dataproc-jobs@PROJECT_ID.iam.gserviceaccount.com` |
+| **GKE/Kubernetes** | |
+| 34 | `privesc34-gke@PROJECT_ID.iam.gserviceaccount.com` |
+| 35 | `privesc35-gke-creds@PROJECT_ID.iam.gserviceaccount.com` |
+| **Vertex AI** | |
+| 36 | `privesc36-notebooks@PROJECT_ID.iam.gserviceaccount.com` |
+| 37 | `privesc37-aiplatform@PROJECT_ID.iam.gserviceaccount.com` |
+| **Cloud Workflows** | |
+| 38 | `privesc38-workflows@PROJECT_ID.iam.gserviceaccount.com` |
+| **Eventarc** | |
+| 39 | `privesc39-eventarc@PROJECT_ID.iam.gserviceaccount.com` |
+| **BigQuery** | |
+| 40 | `privesc40-bq-setiam@PROJECT_ID.iam.gserviceaccount.com` |
+| **Workload Identity** | |
+| 41 | `privesc41-workload-id@PROJECT_ID.iam.gserviceaccount.com` |
+| **Org Policy** | |
+| 42 | `privesc42-org-policy@PROJECT_ID.iam.gserviceaccount.com` |
+| **Deny Bypass** | |
+| 43 | `privesc43-deny-bypass@PROJECT_ID.iam.gserviceaccount.com` |
 
 ## Architecture
 
@@ -1242,7 +1308,7 @@ gcp/
 │   └── cleanup_iam_vulnerable.py
 └── modules/
     ├── free-resources/
-    │   ├── privesc-paths/     # 31 privilege escalation paths
+    │   ├── privesc-paths/     # 43 privilege escalation paths
     │   │   ├── common.tf      # Shared resources
     │   │   ├── privesc1-*.tf  # Individual paths
     │   │   └── ...

@@ -65,7 +65,7 @@ resource "google_cloudfunctions_function" "privesc_function" {
   region      = var.region
   description = "Function running with high-privilege SA"
 
-  runtime = "nodejs18"
+  runtime = "nodejs20"
 
   available_memory_mb   = 128
   source_archive_bucket = google_storage_bucket.function_bucket.name

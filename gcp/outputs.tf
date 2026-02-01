@@ -23,10 +23,6 @@ output "privesc_service_accounts" {
   value       = module.privesc-paths.privesc_service_accounts
 }
 
-output "vulnerable_custom_roles" {
-  description = "List of vulnerable custom roles created"
-  value       = module.privesc-paths.vulnerable_custom_roles
-}
 
 # Summary output for quick reference
 output "summary" {
@@ -46,7 +42,7 @@ output "summary" {
       ${module.privesc-paths.high_priv_service_account_email}
 
     Modules Enabled:
-      - privesc-paths:    Yes (31 paths)
+      - privesc-paths:    Yes (43 paths)
       - tool-testing:     Yes (7 tests)
       - compute:          ${var.enable_compute ? "Yes (~$2-3/mo)" : "No (set enable_compute = true)"}
       - cloud-functions:  ${var.enable_cloud_functions ? "Yes (free tier)" : "No (set enable_cloud_functions = true)"}
