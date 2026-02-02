@@ -36,8 +36,22 @@ resource "google_project_service" "storage" {
   disable_on_destroy = false
 }
 
+resource "google_project_service" "run" {
+  project = var.project_id
+  service = "run.googleapis.com"
+
+  disable_on_destroy = false
+}
+
+resource "google_project_service" "artifactregistry" {
+  project = var.project_id
+  service = "artifactregistry.googleapis.com"
+
+  disable_on_destroy = false
+}
+
 # Grant the default compute service account access to Cloud Storage
-# Required for Cloud Functions Gen1 to access the gcf-sources bucket
+# Required for Cloud Functions to access the source bucket
 resource "google_project_iam_member" "compute_storage_access" {
   project = var.project_id
   role    = "roles/storage.objectViewer"
@@ -50,9 +64,53 @@ resource "google_project_iam_member" "compute_storage_access" {
   ]
 }
 
+# Grant compute SA permissions to build functions (for Gen2 when using custom build SA)
+resource "google_project_iam_member" "compute_artifactregistry" {
+  project = var.project_id
+  role    = "roles/artifactregistry.writer"
+  member  = "serviceAccount:${data.google_project.project.number}-compute@developer.gserviceaccount.com"
+
+  depends_on = [google_project_service.artifactregistry]
+}
+
+resource "google_project_iam_member" "compute_logging" {
+  project = var.project_id
+  role    = "roles/logging.logWriter"
+  member  = "serviceAccount:${data.google_project.project.number}-compute@developer.gserviceaccount.com"
+}
+
+# Grant Cloud Build SA the ability to write to Artifact Registry (required for Gen2)
+resource "google_project_iam_member" "cloudbuild_artifactregistry" {
+  project = var.project_id
+  role    = "roles/artifactregistry.writer"
+  member  = "serviceAccount:${data.google_project.project.number}@cloudbuild.gserviceaccount.com"
+
+  depends_on = [
+    google_project_service.cloudbuild,
+    google_project_service.artifactregistry
+  ]
+}
+
+# Grant Cloud Build SA logging permissions
+resource "google_project_iam_member" "cloudbuild_logging" {
+  project = var.project_id
+  role    = "roles/logging.logWriter"
+  member  = "serviceAccount:${data.google_project.project.number}@cloudbuild.gserviceaccount.com"
+
+  depends_on = [
+    google_project_service.cloudbuild
+  ]
+}
+
 # Wait for IAM propagation
 resource "time_sleep" "wait_for_iam" {
-  depends_on      = [google_project_iam_member.compute_storage_access]
+  depends_on = [
+    google_project_iam_member.compute_storage_access,
+    google_project_iam_member.compute_artifactregistry,
+    google_project_iam_member.compute_logging,
+    google_project_iam_member.cloudbuild_artifactregistry,
+    google_project_iam_member.cloudbuild_logging
+  ]
   create_duration = "90s"
 }
 
@@ -75,64 +133,84 @@ data "archive_file" "function_source" {
 
   source {
     content  = <<-EOF
-      exports.handler = (req, res) => {
-        res.send('Hello from privesc function!');
-      };
-    EOF
-    filename = "index.js"
+import functions_framework
+
+@functions_framework.http
+def handler(request):
+    return 'Hello from privesc function!'
+EOF
+    filename = "main.py"
+  }
+
+  source {
+    content  = <<-EOF
+functions-framework==3.*
+EOF
+    filename = "requirements.txt"
   }
 }
 
 # Upload the function source code
 resource "google_storage_bucket_object" "function_source" {
-  name   = "function-source.zip"
+  name   = "function-source-${data.archive_file.function_source.output_md5}.zip"
   bucket = google_storage_bucket.function_bucket.name
   source = data.archive_file.function_source.output_path
 }
 
-# Cloud Function with high-priv SA
-resource "google_cloudfunctions_function" "privesc_function" {
+# Cloud Function Gen2 with high-priv SA
+resource "google_cloudfunctions2_function" "privesc_function" {
   name        = "${var.resource_prefix}-function"
   project     = var.project_id
-  region      = var.region
+  location    = var.region
   description = "Function running with high-privilege SA"
 
-  runtime = "nodejs20"
+  build_config {
+    runtime     = "python312"
+    entry_point = "handler"
+    source {
+      storage_source {
+        bucket = google_storage_bucket.function_bucket.name
+        object = google_storage_bucket_object.function_source.name
+      }
+    }
+    # Use default compute SA for build if org policy disables default Cloud Build SA
+    service_account = "projects/${var.project_id}/serviceAccounts/${data.google_project.project.number}-compute@developer.gserviceaccount.com"
+  }
 
-  available_memory_mb   = 128
-  source_archive_bucket = google_storage_bucket.function_bucket.name
-  source_archive_object = google_storage_bucket_object.function_source.name
-  trigger_http          = true
-  entry_point           = "handler"
-
-  # Attach high-privilege service account
-  service_account_email = var.high_priv_sa_email
+  service_config {
+    max_instance_count    = 1
+    available_memory      = "128Mi"
+    timeout_seconds       = 60
+    service_account_email = var.high_priv_sa_email
+  }
 
   depends_on = [
     google_project_service.cloudfunctions,
     google_project_service.cloudbuild,
+    google_project_service.run,
+    google_project_service.artifactregistry,
     time_sleep.wait_for_iam
   ]
 }
 
 # Allow unauthenticated invocation (for testing)
-resource "google_cloudfunctions_function_iam_member" "invoker" {
-  project        = var.project_id
-  region         = var.region
-  cloud_function = google_cloudfunctions_function.privesc_function.name
-  role           = "roles/cloudfunctions.invoker"
-  member         = "allUsers"
+resource "google_cloud_run_service_iam_member" "invoker" {
+  project  = var.project_id
+  location = var.region
+  service  = google_cloudfunctions2_function.privesc_function.name
+  role     = "roles/run.invoker"
+  member   = "allUsers"
 }
 
 # Outputs
 output "function_name" {
   description = "Name of the created function"
-  value       = google_cloudfunctions_function.privesc_function.name
+  value       = google_cloudfunctions2_function.privesc_function.name
 }
 
 output "function_url" {
   description = "HTTP trigger URL"
-  value       = google_cloudfunctions_function.privesc_function.https_trigger_url
+  value       = google_cloudfunctions2_function.privesc_function.service_config[0].uri
 }
 
 output "attached_service_account" {
