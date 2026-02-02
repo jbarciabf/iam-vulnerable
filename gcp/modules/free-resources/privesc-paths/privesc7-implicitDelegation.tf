@@ -13,8 +13,8 @@
 # REAL-WORLD IMPACT: Critical - Multi-hop impersonation chain
 
 resource "google_service_account" "privesc7_implicit_delegation" {
-  account_id   = "${var.resource_prefix}23-implicit-deleg"
-  display_name = "Privesc23 - Implicit Delegation"
+  account_id   = "${var.resource_prefix}7-implicit-deleg"
+  display_name = "Privesc7 - Implicit Delegation"
   description  = "Can escalate via implicit delegation chain"
   project      = var.project_id
 

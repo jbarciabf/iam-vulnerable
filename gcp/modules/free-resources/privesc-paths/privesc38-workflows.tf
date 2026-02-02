@@ -14,8 +14,8 @@
 # REAL-WORLD IMPACT: Critical - Automated execution as privileged SA
 
 resource "google_service_account" "privesc38_workflows" {
-  account_id   = "${var.resource_prefix}31-workflows"
-  display_name = "Privesc31 - Cloud Workflows"
+  account_id   = "${var.resource_prefix}38-workflows"
+  display_name = "Privesc38 - Cloud Workflows"
   description  = "Can escalate via workflows.workflows.create"
   project      = var.project_id
 
@@ -24,8 +24,8 @@ resource "google_service_account" "privesc38_workflows" {
 
 # Create a custom role with Workflows permissions
 resource "google_project_iam_custom_role" "privesc38_workflows" {
-  role_id     = "${var.resource_prefix}_31_workflows"
-  title       = "Privesc31 Workflow Creator"
+  role_id     = "${var.resource_prefix}_38_workflows"
+  title       = "Privesc38 Workflow Creator"
   description = "Can create Cloud Workflows"
   project     = var.project_id
 

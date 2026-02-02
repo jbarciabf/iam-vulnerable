@@ -17,8 +17,8 @@
 #       This path only creates the IAM configuration, not the cluster
 
 resource "google_service_account" "privesc34_gke" {
-  account_id   = "${var.resource_prefix}29-gke-cluster"
-  display_name = "Privesc29 - GKE Clusters"
+  account_id   = "${var.resource_prefix}34-gke"
+  display_name = "Privesc34 - GKE Clusters"
   description  = "Can escalate via container.clusters.create"
   project      = var.project_id
 
@@ -27,8 +27,8 @@ resource "google_service_account" "privesc34_gke" {
 
 # Create a custom role with GKE permissions
 resource "google_project_iam_custom_role" "privesc34_gke" {
-  role_id     = "${var.resource_prefix}_29_gke"
-  title       = "Privesc29 GKE Cluster Creator"
+  role_id     = "${var.resource_prefix}_34_gke"
+  title       = "Privesc34 GKE Cluster Creator"
   description = "Can create GKE clusters"
   project     = var.project_id
 

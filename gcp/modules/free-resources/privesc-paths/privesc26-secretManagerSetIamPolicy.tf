@@ -23,26 +23,12 @@ resource "google_service_account" "privesc26_secret_set_iam" {
   depends_on = [time_sleep.batch6_delay]
 }
 
-# Create a custom role with Secret Manager IAM permissions
-resource "google_project_iam_custom_role" "privesc26_secret_set_iam" {
-  role_id     = "${var.resource_prefix}_26_secret_set_iam"
-  title       = "Privesc26 Secret Manager IAM Admin"
-  description = "Can modify IAM policies on secrets"
-  project     = var.project_id
-
-  permissions = [
-    "secretmanager.secrets.setIamPolicy",
-    "secretmanager.secrets.getIamPolicy",
-    "secretmanager.secrets.get",
-    "secretmanager.secrets.list",
-  ]
-}
-
-# Grant the custom role at project level
-resource "google_project_iam_member" "privesc26_secret_set_iam" {
-  project = var.project_id
-  role    = google_project_iam_custom_role.privesc26_secret_set_iam.id
-  member  = "serviceAccount:${google_service_account.privesc26_secret_set_iam.email}"
+# Grant admin ONLY on the target secret (not project-wide)
+# This prevents the attacker from modifying IAM on other secrets
+resource "google_secret_manager_secret_iam_member" "privesc26_secret_admin" {
+  secret_id = google_secret_manager_secret.target_secret.id
+  role      = "roles/secretmanager.admin"
+  member    = "serviceAccount:${google_service_account.privesc26_secret_set_iam.email}"
 }
 
 # Allow the attacker to impersonate this service account

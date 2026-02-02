@@ -14,8 +14,8 @@
 # REAL-WORLD IMPACT: Critical - Arbitrary code execution as privileged SA
 
 resource "google_service_account" "privesc20_run_jobs" {
-  account_id   = "${var.resource_prefix}27-run-jobs"
-  display_name = "Privesc27 - Cloud Run Jobs"
+  account_id   = "${var.resource_prefix}20-run-jobs"
+  display_name = "Privesc20 - Cloud Run Jobs"
   description  = "Can escalate via run.jobs.create"
   project      = var.project_id
 
@@ -24,8 +24,8 @@ resource "google_service_account" "privesc20_run_jobs" {
 
 # Create a custom role with Cloud Run jobs permissions
 resource "google_project_iam_custom_role" "privesc20_run_jobs" {
-  role_id     = "${var.resource_prefix}_27_run_jobs"
-  title       = "Privesc27 Cloud Run Jobs Creator"
+  role_id     = "${var.resource_prefix}_20_run_jobs"
+  title       = "Privesc20 Cloud Run Jobs Creator"
   description = "Can create Cloud Run jobs"
   project     = var.project_id
 

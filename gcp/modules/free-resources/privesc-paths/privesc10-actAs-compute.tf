@@ -14,8 +14,8 @@
 # REAL-WORLD IMPACT: Critical - Common escalation path in GCP
 
 resource "google_service_account" "privesc10_actas_compute" {
-  account_id   = "${var.resource_prefix}4-actas-compute"
-  display_name = "Privesc4 - actAs + Compute"
+  account_id   = "${var.resource_prefix}10-actas-compute"
+  display_name = "Privesc10 - actAs + Compute"
   description  = "Can escalate via VM creation with high-priv SA"
   project      = var.project_id
 

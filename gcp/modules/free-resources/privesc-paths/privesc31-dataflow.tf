@@ -14,8 +14,8 @@
 # REAL-WORLD IMPACT: High - Data pipeline abuse
 
 resource "google_service_account" "privesc31_dataflow" {
-  account_id   = "${var.resource_prefix}19-dataflow"
-  display_name = "Privesc19 - Dataflow"
+  account_id   = "${var.resource_prefix}31-dataflow"
+  display_name = "Privesc31 - Dataflow"
   description  = "Can escalate via Dataflow job"
   project      = var.project_id
 

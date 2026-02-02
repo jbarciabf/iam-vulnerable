@@ -14,8 +14,8 @@
 # REAL-WORLD IMPACT: Critical - Container-based privilege escalation
 
 resource "google_service_account" "privesc18_actas_cloudrun" {
-  account_id   = "${var.resource_prefix}6-actas-cloudrun"
-  display_name = "Privesc6 - actAs + Cloud Run"
+  account_id   = "${var.resource_prefix}18-actas-cloudrun"
+  display_name = "Privesc18 - actAs + Cloud Run"
   description  = "Can escalate via Cloud Run with high-priv SA"
   project      = var.project_id
 

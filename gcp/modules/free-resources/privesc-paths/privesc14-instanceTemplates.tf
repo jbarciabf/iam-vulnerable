@@ -14,29 +14,27 @@
 # REAL-WORLD IMPACT: High - Persistent SA access through templates
 
 resource "google_service_account" "privesc14_instance_templates" {
-  account_id   = "${var.resource_prefix}26-inst-templates"
-  display_name = "Privesc26 - Instance Templates"
+  account_id   = "${var.resource_prefix}14-inst-templates"
+  display_name = "Privesc14 - Instance Templates"
   description  = "Can escalate via compute.instanceTemplates.create"
   project      = var.project_id
 
   depends_on = [time_sleep.batch4_delay]
 }
 
-# Create a custom role with instance template permissions
+# Create a custom role with ONLY instance template permissions
+# Removed: compute.instances.create, compute.disks.create, compute.subnetworks.*
+# These were enabling alternative attack paths (direct instance creation)
 resource "google_project_iam_custom_role" "privesc14_instance_templates" {
-  role_id     = "${var.resource_prefix}_26_inst_templates"
-  title       = "Privesc26 Instance Templates Creator"
-  description = "Can create instance templates"
+  role_id     = "${var.resource_prefix}_14_inst_templates"
+  title       = "Privesc14 Instance Templates Creator"
+  description = "Can create instance templates (restricted to templates only)"
   project     = var.project_id
 
   permissions = [
     "compute.instanceTemplates.create",
     "compute.instanceTemplates.get",
     "compute.instanceTemplates.list",
-    "compute.instances.create",
-    "compute.disks.create",
-    "compute.subnetworks.use",
-    "compute.subnetworks.useExternalIp",
   ]
 }
 

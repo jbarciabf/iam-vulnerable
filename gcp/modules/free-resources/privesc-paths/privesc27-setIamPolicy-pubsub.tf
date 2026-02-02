@@ -14,37 +14,27 @@
 # REAL-WORLD IMPACT: High - Message interception, data exfiltration
 
 resource "google_service_account" "privesc27_pubsub_iam" {
-  account_id   = "${var.resource_prefix}21-pubsub-iam"
-  display_name = "Privesc21 - Pub/Sub IAM"
+  account_id   = "${var.resource_prefix}27-pubsub-iam"
+  display_name = "Privesc27 - Pub/Sub IAM"
   description  = "Can modify Pub/Sub IAM policies"
   project      = var.project_id
 
   depends_on = [time_sleep.batch6_delay]
 }
 
-# Custom role with Pub/Sub IAM permissions
-resource "google_project_iam_custom_role" "pubsub_iam" {
-  role_id     = "${var.resource_prefix}_pubsubIam"
-  title       = "Privesc - Pub/Sub IAM"
-  description = "Vulnerable: Can modify Pub/Sub IAM policies"
-  permissions = [
-    "pubsub.topics.list",
-    "pubsub.topics.get",
-    "pubsub.topics.getIamPolicy",
-    "pubsub.topics.setIamPolicy",
-    "pubsub.subscriptions.list",
-    "pubsub.subscriptions.get",
-    "pubsub.subscriptions.getIamPolicy",
-    "pubsub.subscriptions.setIamPolicy",
-  ]
-  project = var.project_id
+# Grant admin ONLY on the target topic (not project-wide)
+# This prevents the attacker from modifying IAM on other topics
+resource "google_pubsub_topic_iam_member" "privesc27_topic_admin" {
+  topic  = google_pubsub_topic.target_topic.name
+  role   = "roles/pubsub.admin"
+  member = "serviceAccount:${google_service_account.privesc27_pubsub_iam.email}"
 }
 
-# Assign the role
-resource "google_project_iam_member" "privesc27_role" {
-  project = var.project_id
-  role    = google_project_iam_custom_role.pubsub_iam.id
-  member  = "serviceAccount:${google_service_account.privesc27_pubsub_iam.email}"
+# Grant admin ONLY on the target subscription
+resource "google_pubsub_subscription_iam_member" "privesc27_subscription_admin" {
+  subscription = google_pubsub_subscription.target_subscription.name
+  role         = "roles/pubsub.admin"
+  member       = "serviceAccount:${google_service_account.privesc27_pubsub_iam.email}"
 }
 
 # Allow the attacker to impersonate this service account

@@ -23,25 +23,12 @@ resource "google_service_account" "privesc40_bigquery" {
   depends_on = [time_sleep.batch9_delay]
 }
 
-# Create a custom role with BigQuery IAM permissions
-resource "google_project_iam_custom_role" "privesc40_bigquery" {
-  role_id     = "${var.resource_prefix}_40_bq_setiam"
-  title       = "Privesc40 BigQuery Dataset IAM Admin"
-  description = "Can modify IAM policies on BigQuery datasets"
-  project     = var.project_id
-
-  permissions = [
-    "bigquery.datasets.setIamPolicy",
-    "bigquery.datasets.getIamPolicy",
-    "bigquery.datasets.get",
-  ]
-}
-
-# Grant the custom role at project level
-resource "google_project_iam_member" "privesc40_bigquery" {
-  project = var.project_id
-  role    = google_project_iam_custom_role.privesc40_bigquery.id
-  member  = "serviceAccount:${google_service_account.privesc40_bigquery.email}"
+# Grant admin ONLY on the target dataset (not project-wide)
+# This prevents the attacker from modifying IAM on other datasets
+resource "google_bigquery_dataset_iam_member" "privesc40_dataset_admin" {
+  dataset_id = google_bigquery_dataset.target_dataset.dataset_id
+  role       = "roles/bigquery.admin"
+  member     = "serviceAccount:${google_service_account.privesc40_bigquery.email}"
 }
 
 # Allow the attacker to impersonate this service account

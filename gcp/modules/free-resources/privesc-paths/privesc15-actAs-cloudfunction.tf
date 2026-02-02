@@ -14,8 +14,8 @@
 # REAL-WORLD IMPACT: Critical - Serverless privilege escalation
 
 resource "google_service_account" "privesc15_actas_function" {
-  account_id   = "${var.resource_prefix}5-actas-function"
-  display_name = "Privesc5 - actAs + Cloud Function"
+  account_id   = "${var.resource_prefix}15-actas-function"
+  display_name = "Privesc15 - actAs + Cloud Function"
   description  = "Can escalate via Cloud Function with high-priv SA"
   project      = var.project_id
 

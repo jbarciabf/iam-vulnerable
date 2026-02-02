@@ -14,8 +14,8 @@
 # REAL-WORLD IMPACT: High - Scheduled task abuse, token theft
 
 resource "google_service_account" "privesc28_scheduler" {
-  account_id   = "${var.resource_prefix}22-scheduler"
-  display_name = "Privesc22 - Cloud Scheduler"
+  account_id   = "${var.resource_prefix}28-scheduler"
+  display_name = "Privesc28 - Cloud Scheduler"
   description  = "Can escalate via Cloud Scheduler jobs"
   project      = var.project_id
 

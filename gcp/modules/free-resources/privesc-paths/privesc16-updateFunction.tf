@@ -26,18 +26,17 @@ resource "google_service_account" "privesc16_update_function" {
   depends_on = [time_sleep.batch4_delay]
 }
 
-# Custom role with function update permission
+# Custom role with ONLY function update permission
+# Removed: list/get (discovery) and sourceCodeSet (alternative attack path)
+# This forces using only the update permission for this privesc path
 resource "google_project_iam_custom_role" "update_function" {
   count = var.enable_privesc16 ? 1 : 0
 
   role_id     = "${var.resource_prefix}_updateFunction"
-  title       = "Privesc - Update Cloud Function"
-  description = "Vulnerable: Can update Cloud Function code"
+  title       = "Privesc16 - Update Cloud Function"
+  description = "Vulnerable: Can update Cloud Function code (update only)"
   permissions = [
-    "cloudfunctions.functions.list",
-    "cloudfunctions.functions.get",
     "cloudfunctions.functions.update",
-    "cloudfunctions.functions.sourceCodeSet",
   ]
   project = var.project_id
 }

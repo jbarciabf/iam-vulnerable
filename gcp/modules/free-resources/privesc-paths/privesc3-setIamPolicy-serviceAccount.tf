@@ -22,25 +22,42 @@ resource "google_service_account" "privesc3_set_sa_iam" {
   depends_on = [time_sleep.batch2_delay]
 }
 
-# Custom role with the vulnerable permission
-resource "google_project_iam_custom_role" "set_sa_iam_policy" {
-  role_id     = "${var.resource_prefix}_setSAIamPolicy"
-  title       = "Privesc - Set SA IAM Policy"
-  description = "Vulnerable: Can modify IAM policy on service accounts"
+# Custom role for list/get at project level (discovery only)
+resource "google_project_iam_custom_role" "privesc3_sa_viewer" {
+  role_id     = "${var.resource_prefix}_3_saViewer"
+  title       = "Privesc3 - SA Viewer"
+  description = "Can list and view service accounts"
   permissions = [
     "iam.serviceAccounts.list",
     "iam.serviceAccounts.get",
+  ]
+  project = var.project_id
+}
+
+# Grant viewer at project level
+resource "google_project_iam_member" "privesc3_viewer" {
+  project = var.project_id
+  role    = google_project_iam_custom_role.privesc3_sa_viewer.id
+  member  = "serviceAccount:${google_service_account.privesc3_set_sa_iam.email}"
+}
+
+# Custom role with setIamPolicy permission - granted at SA level only
+resource "google_project_iam_custom_role" "set_sa_iam_policy" {
+  role_id     = "${var.resource_prefix}_setSAIamPolicy"
+  title       = "Privesc3 - Set SA IAM Policy"
+  description = "Vulnerable: Can modify IAM policy on this specific service account"
+  permissions = [
     "iam.serviceAccounts.getIamPolicy",
     "iam.serviceAccounts.setIamPolicy",
   ]
   project = var.project_id
 }
 
-# Assign the vulnerable role
-resource "google_project_iam_member" "privesc3_role" {
-  project = var.project_id
-  role    = google_project_iam_custom_role.set_sa_iam_policy.id
-  member  = "serviceAccount:${google_service_account.privesc3_set_sa_iam.email}"
+# Grant setIamPolicy ONLY on the high-privilege SA (not project-wide)
+resource "google_service_account_iam_member" "privesc3_set_iam_on_high_priv" {
+  service_account_id = google_service_account.high_priv.name
+  role               = google_project_iam_custom_role.set_sa_iam_policy.id
+  member             = "serviceAccount:${google_service_account.privesc3_set_sa_iam.email}"
 }
 
 # Allow the attacker to impersonate this service account

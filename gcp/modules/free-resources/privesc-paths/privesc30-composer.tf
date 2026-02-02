@@ -14,8 +14,8 @@
 # REAL-WORLD IMPACT: Critical - Workflow orchestration abuse
 
 resource "google_service_account" "privesc30_composer" {
-  account_id   = "${var.resource_prefix}18-composer"
-  display_name = "Privesc18 - Cloud Composer"
+  account_id   = "${var.resource_prefix}30-composer"
+  display_name = "Privesc30 - Cloud Composer"
   description  = "Can escalate via Cloud Composer environment"
   project      = var.project_id
 

@@ -14,26 +14,20 @@
 # REAL-WORLD IMPACT: Critical - Direct credential theft
 
 resource "google_service_account" "privesc25_secret_access" {
-  account_id   = "${var.resource_prefix}20-secret-access"
-  display_name = "Privesc20 - Secret Manager"
+  account_id   = "${var.resource_prefix}25-secret-access"
+  display_name = "Privesc25 - Secret Manager"
   description  = "Can access secrets in Secret Manager"
   project      = var.project_id
 
   depends_on = [time_sleep.batch6_delay]
 }
 
-# Grant Secret Manager accessor
-resource "google_project_iam_member" "privesc25_secrets" {
-  project = var.project_id
-  role    = "roles/secretmanager.secretAccessor"
-  member  = "serviceAccount:${google_service_account.privesc25_secret_access.email}"
-}
-
-# Also grant ability to list secrets
-resource "google_project_iam_member" "privesc25_secrets_viewer" {
-  project = var.project_id
-  role    = "roles/secretmanager.viewer"
-  member  = "serviceAccount:${google_service_account.privesc25_secret_access.email}"
+# Grant secret accessor ONLY on the target secret (not project-wide)
+# This prevents the attacker from accessing other secrets
+resource "google_secret_manager_secret_iam_member" "privesc25_secret_accessor" {
+  secret_id = google_secret_manager_secret.target_secret.id
+  role      = "roles/secretmanager.secretAccessor"
+  member    = "serviceAccount:${google_service_account.privesc25_secret_access.email}"
 }
 
 # Allow the attacker to impersonate this service account

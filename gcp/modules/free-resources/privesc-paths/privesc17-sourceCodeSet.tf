@@ -27,21 +27,19 @@ resource "google_service_account" "privesc17_source_code_set" {
   depends_on = [time_sleep.batch4_delay]
 }
 
-# Create a custom role with sourceCodeSet permission
+# Create a custom role with ONLY sourceCodeSet permission
+# Removed: list/get (discovery) and storage.* (should use privesc24 for storage write)
+# This focuses the attack path on sourceCodeSet only
 resource "google_project_iam_custom_role" "privesc17_source_code_set" {
   count = var.enable_privesc17 ? 1 : 0
 
   role_id     = "${var.resource_prefix}_17_source_code_set"
   title       = "Privesc17 Source Code Set"
-  description = "Can set function source code"
+  description = "Can set function source code (sourceCodeSet only)"
   project     = var.project_id
 
   permissions = [
     "cloudfunctions.functions.sourceCodeSet",
-    "cloudfunctions.functions.get",
-    "cloudfunctions.functions.list",
-    "storage.objects.create",
-    "storage.objects.get",
   ]
 }
 

@@ -14,8 +14,8 @@
 # REAL-WORLD IMPACT: High - Self-escalation through role modification
 
 resource "google_service_account" "privesc9_update_role" {
-  account_id   = "${var.resource_prefix}11-update-role"
-  display_name = "Privesc11 - Update Role"
+  account_id   = "${var.resource_prefix}9-update-role"
+  display_name = "Privesc9 - Update Role"
   description  = "Can escalate by modifying custom roles"
   project      = var.project_id
 

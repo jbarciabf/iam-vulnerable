@@ -15,8 +15,8 @@
 # REAL-WORLD IMPACT: High - Can access OIDC-protected services
 
 resource "google_service_account" "privesc8_get_oidc_token" {
-  account_id   = "${var.resource_prefix}24-get-oidc-token"
-  display_name = "Privesc24 - getOpenIdToken"
+  account_id   = "${var.resource_prefix}8-get-oidc-token"
+  display_name = "Privesc8 - getOpenIdToken"
   description  = "Can escalate via OIDC token generation"
   project      = var.project_id
 
@@ -25,8 +25,8 @@ resource "google_service_account" "privesc8_get_oidc_token" {
 
 # Create a custom role with just getOpenIdToken
 resource "google_project_iam_custom_role" "privesc8_oidc_creator" {
-  role_id     = "${var.resource_prefix}_24_oidc_creator"
-  title       = "Privesc24 OIDC Token Creator"
+  role_id     = "${var.resource_prefix}_8_oidc_creator"
+  title       = "Privesc8 OIDC Token Creator"
   description = "Can generate OIDC tokens for service accounts"
   project     = var.project_id
 

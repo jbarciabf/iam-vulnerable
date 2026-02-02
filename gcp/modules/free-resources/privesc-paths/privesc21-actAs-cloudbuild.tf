@@ -14,8 +14,8 @@
 # REAL-WORLD IMPACT: Critical - CI/CD pipeline abuse
 
 resource "google_service_account" "privesc21_actas_cloudbuild" {
-  account_id   = "${var.resource_prefix}7-actas-cloudbuild"
-  display_name = "Privesc7 - actAs + Cloud Build"
+  account_id   = "${var.resource_prefix}21-actas-cloudbuild"
+  display_name = "Privesc21 - actAs + Cloud Build"
   description  = "Can escalate via Cloud Build with high-priv SA"
   project      = var.project_id
 

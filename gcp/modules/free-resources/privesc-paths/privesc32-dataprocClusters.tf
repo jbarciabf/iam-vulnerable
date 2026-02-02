@@ -17,8 +17,8 @@
 #       This path only creates the IAM configuration, not the cluster
 
 resource "google_service_account" "privesc32_dataproc" {
-  account_id   = "${var.resource_prefix}28-dataproc"
-  display_name = "Privesc28 - Dataproc Clusters"
+  account_id   = "${var.resource_prefix}32-dataproc"
+  display_name = "Privesc32 - Dataproc Clusters"
   description  = "Can escalate via dataproc.clusters.create"
   project      = var.project_id
 
@@ -27,8 +27,8 @@ resource "google_service_account" "privesc32_dataproc" {
 
 # Create a custom role with Dataproc permissions
 resource "google_project_iam_custom_role" "privesc32_dataproc" {
-  role_id     = "${var.resource_prefix}_28_dataproc"
-  title       = "Privesc28 Dataproc Cluster Creator"
+  role_id     = "${var.resource_prefix}_32_dataproc"
+  title       = "Privesc32 Dataproc Cluster Creator"
   description = "Can create Dataproc clusters"
   project     = var.project_id
 

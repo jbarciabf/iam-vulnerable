@@ -271,3 +271,65 @@ resource "google_project_service" "orgpolicy" {
 
   disable_on_destroy = false
 }
+
+# =============================================================================
+# TARGET RESOURCES FOR RESOURCE-LEVEL PRIVESC PATHS
+# =============================================================================
+# These resources are targets for privesc paths that use resource-level IAM.
+# Creating specific targets prevents alternative attack paths.
+
+# Target bucket for privesc23 (bucket setIamPolicy) and privesc24 (storage write)
+resource "google_storage_bucket" "target_bucket" {
+  name          = "${var.project_id}-${var.resource_prefix}-target"
+  project       = var.project_id
+  location      = "US"
+  force_destroy = true
+
+  uniform_bucket_level_access = true
+
+  depends_on = [google_project_service.storage]
+}
+
+# Target secret for privesc25 (secret access) and privesc26 (secret setIamPolicy)
+resource "google_secret_manager_secret" "target_secret" {
+  secret_id = "${var.resource_prefix}-target-secret"
+  project   = var.project_id
+
+  replication {
+    auto {}
+  }
+
+  depends_on = [google_project_service.secretmanager]
+}
+
+# Add a secret version with dummy data
+resource "google_secret_manager_secret_version" "target_secret_version" {
+  secret      = google_secret_manager_secret.target_secret.id
+  secret_data = "SENSITIVE_API_KEY_12345"
+}
+
+# Target Pub/Sub topic for privesc27 (pubsub setIamPolicy)
+resource "google_pubsub_topic" "target_topic" {
+  name    = "${var.resource_prefix}-target-topic"
+  project = var.project_id
+
+  depends_on = [google_project_service.pubsub]
+}
+
+# Target Pub/Sub subscription for privesc27
+resource "google_pubsub_subscription" "target_subscription" {
+  name    = "${var.resource_prefix}-target-sub"
+  project = var.project_id
+  topic   = google_pubsub_topic.target_topic.id
+}
+
+# Target BigQuery dataset for privesc40 (bigquery setIamPolicy)
+resource "google_bigquery_dataset" "target_dataset" {
+  dataset_id = replace("${var.resource_prefix}_target_dataset", "-", "_")
+  project    = var.project_id
+  location   = "US"
+
+  delete_contents_on_destroy = true
+
+  depends_on = [google_project_service.bigquery]
+}

@@ -23,27 +23,12 @@ resource "google_service_account" "privesc24_storage_write" {
   depends_on = [time_sleep.batch6_delay]
 }
 
-# Create a custom role with storage write permissions
-resource "google_project_iam_custom_role" "privesc24_storage_write" {
-  role_id     = "${var.resource_prefix}_24_storage_write"
-  title       = "Privesc24 Storage Object Writer"
-  description = "Can write objects to storage buckets"
-  project     = var.project_id
-
-  permissions = [
-    "storage.objects.create",
-    "storage.objects.get",
-    "storage.objects.list",
-    "storage.buckets.get",
-    "storage.buckets.list",
-  ]
-}
-
-# Grant the custom role at project level
-resource "google_project_iam_member" "privesc24_storage_write" {
-  project = var.project_id
-  role    = google_project_iam_custom_role.privesc24_storage_write.id
-  member  = "serviceAccount:${google_service_account.privesc24_storage_write.email}"
+# Grant object create ONLY on the target bucket (not project-wide)
+# This prevents the attacker from writing to other buckets
+resource "google_storage_bucket_iam_member" "privesc24_object_creator" {
+  bucket = google_storage_bucket.target_bucket.name
+  role   = "roles/storage.objectCreator"
+  member = "serviceAccount:${google_service_account.privesc24_storage_write.email}"
 }
 
 # Allow the attacker to impersonate this service account

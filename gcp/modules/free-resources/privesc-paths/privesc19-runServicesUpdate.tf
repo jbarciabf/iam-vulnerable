@@ -27,19 +27,18 @@ resource "google_service_account" "privesc19_run_update" {
   depends_on = [time_sleep.batch5_delay]
 }
 
-# Create a custom role with run.services.update permission
+# Create a custom role with ONLY run.services.update permission
+# Removed: list/get (discovery) - attacker must know target service name
 resource "google_project_iam_custom_role" "privesc19_run_update" {
   count = var.enable_privesc19 ? 1 : 0
 
   role_id     = "${var.resource_prefix}_19_run_update"
   title       = "Privesc19 Cloud Run Updater"
-  description = "Can update Cloud Run services"
+  description = "Can update Cloud Run services (update only)"
   project     = var.project_id
 
   permissions = [
     "run.services.update",
-    "run.services.get",
-    "run.services.list",
   ]
 }
 

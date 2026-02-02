@@ -14,33 +14,20 @@
 # REAL-WORLD IMPACT: High - Data exfiltration, Terraform state access
 
 resource "google_service_account" "privesc23_bucket_iam" {
-  account_id   = "${var.resource_prefix}14-bucket-iam"
-  display_name = "Privesc14 - Bucket IAM"
+  account_id   = "${var.resource_prefix}23-bucket-iam"
+  display_name = "Privesc23 - Bucket IAM"
   description  = "Can escalate via storage bucket IAM modification"
   project      = var.project_id
 
   depends_on = [time_sleep.batch6_delay]
 }
 
-# Custom role with bucket IAM manipulation
-resource "google_project_iam_custom_role" "bucket_iam" {
-  role_id     = "${var.resource_prefix}_bucketIam"
-  title       = "Privesc - Bucket IAM"
-  description = "Vulnerable: Can modify storage bucket IAM policies"
-  permissions = [
-    "storage.buckets.list",
-    "storage.buckets.get",
-    "storage.buckets.getIamPolicy",
-    "storage.buckets.setIamPolicy",
-  ]
-  project = var.project_id
-}
-
-# Assign the vulnerable role
-resource "google_project_iam_member" "privesc23_role" {
-  project = var.project_id
-  role    = google_project_iam_custom_role.bucket_iam.id
-  member  = "serviceAccount:${google_service_account.privesc23_bucket_iam.email}"
+# Grant setIamPolicy ONLY on the target bucket (not project-wide)
+# This prevents the attacker from modifying IAM on other buckets
+resource "google_storage_bucket_iam_member" "privesc23_bucket_admin" {
+  bucket = google_storage_bucket.target_bucket.name
+  role   = "roles/storage.admin"
+  member = "serviceAccount:${google_service_account.privesc23_bucket_iam.email}"
 }
 
 # Allow the attacker to impersonate this service account

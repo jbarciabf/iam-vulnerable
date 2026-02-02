@@ -14,8 +14,8 @@
 # REAL-WORLD IMPACT: High - Deny policy bypass
 
 resource "google_service_account" "privesc43_deny_bypass" {
-  account_id   = "${var.resource_prefix}16-deny-bypass"
-  display_name = "Privesc16 - Deny Bypass"
+  account_id   = "${var.resource_prefix}43-deny-bypass"
+  display_name = "Privesc43 - Deny Bypass"
   description  = "Can escalate by bypassing explicit deny via SA chaining"
   project      = var.project_id
 

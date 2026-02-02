@@ -14,8 +14,8 @@
 # REAL-WORLD IMPACT: Critical - Direct token generation
 
 resource "google_service_account" "privesc4_get_access_token" {
-  account_id   = "${var.resource_prefix}8-get-access-token"
-  display_name = "Privesc8 - getAccessToken"
+  account_id   = "${var.resource_prefix}4-get-access-token"
+  display_name = "Privesc4 - getAccessToken"
   description  = "Can escalate via direct token generation"
   project      = var.project_id
 

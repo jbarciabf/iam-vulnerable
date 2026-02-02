@@ -15,8 +15,8 @@
 # REAL-WORLD IMPACT: High - Infrastructure-as-code abuse
 
 resource "google_service_account" "privesc29_deployment_manager" {
-  account_id   = "${var.resource_prefix}17-deployment-mgr"
-  display_name = "Privesc17 - Deployment Manager"
+  account_id   = "${var.resource_prefix}29-deployment-mgr"
+  display_name = "Privesc29 - Deployment Manager"
   description  = "Can escalate via Deployment Manager"
   project      = var.project_id
 
