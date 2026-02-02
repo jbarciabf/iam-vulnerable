@@ -33,17 +33,18 @@ resource "google_project_iam_custom_role" "fp1_role" {
   project = var.project_id
 }
 
-# Grant with a condition that requires a specific resource tag
-# This cannot be exploited because the condition checks resource attributes
+# Grant with a condition that makes this non-exploitable
+# Using a time-based condition set to a past date (already expired)
+# This demonstrates a restrictive condition that tools should recognize
 resource "google_project_iam_member" "fp1_role_binding" {
   project = var.project_id
   role    = google_project_iam_custom_role.fp1_role.id
   member  = "serviceAccount:${google_service_account.fp1_restrictive_condition.email}"
 
   condition {
-    title       = "require-sandbox-label"
-    description = "Only applies to resources with sandbox=true label"
-    expression  = "resource.matchLabels('sandbox', 'true')"
+    title       = "expired-access"
+    description = "Access expired - should not be exploitable"
+    expression  = "request.time < timestamp('2020-01-01T00:00:00Z')"
   }
 }
 
