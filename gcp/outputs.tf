@@ -42,29 +42,27 @@ output "summary" {
       ${module.privesc-paths.high_priv_service_account_email}
 
     Modules Enabled:
-      - privesc-paths:    Yes (36 enabled + 7 disabled by default)
-      - tool-testing:     Yes (7 tests)
+      - privesc-paths:    Yes (33 enabled + 13 disabled by default)
+      - tool-testing:     ${var.enable_tool_testing ? "Yes (7 tests)" : "Disabled"}
 
     Disabled Privesc Paths (enable individually):
-      - privesc11 (setMetadata):     ${var.enable_privesc11 ? "Enabled" : "Disabled"}
-      - privesc12 (osLogin):         ${var.enable_privesc12 ? "Enabled" : "Disabled"}
-      - privesc13 (setServiceAccount): ${var.enable_privesc13 ? "Enabled" : "Disabled"}
-      - privesc16 (updateFunction):  ${var.enable_privesc16 ? "Enabled" : "Disabled"}
-      - privesc17 (sourceCodeSet):   ${var.enable_privesc17 ? "Enabled" : "Disabled"}
-      - privesc19 (run.services.update): ${var.enable_privesc19 ? "Enabled" : "Disabled"}
-      - privesc42 (orgpolicy.policy.set): ${var.enable_privesc42 ? "Enabled" : "Disabled"}
+      - privesc11a (setMetadata gcloud):  ${var.enable_privesc11a ? "Enabled" : "Disabled"}
+      - privesc11b (setMetadata manual):  ${var.enable_privesc11b ? "Enabled" : "Disabled"}
+      - privesc12 (setCommonInstanceMetadata): ${var.enable_privesc12 ? "Enabled" : "Disabled"}
+      - privesc13 (existingSSH):          ${var.enable_privesc13 ? "Enabled" : "Disabled"}
+      - privesc14 (osLogin):              ${var.enable_privesc14 ? "Enabled" : "Disabled"}
+      - privesc15 (setServiceAccount):    ${var.enable_privesc15 ? "Enabled" : "Disabled"}
+      - privesc18 (updateFunction):       ${var.enable_privesc18 ? "Enabled" : "Disabled"}
+      - privesc19 (run.services.create):  ${var.enable_privesc19 ? "Enabled" : "Disabled"}
+      - privesc20 (run.services.update):  ${var.enable_privesc20 ? "Enabled" : "Disabled"}
+      - privesc21 (run.jobs.create):      ${var.enable_privesc21 ? "Enabled" : "Disabled"}
+      - privesc22 (run.jobs.update):      ${var.enable_privesc22 ? "Enabled" : "Disabled"}
+      - privesc26 (scheduler.jobs.update): ${var.enable_privesc26 ? "Enabled" : "Disabled"}
+      - privesc28 (dm.deployments.update): ${var.enable_privesc28 ? "Enabled" : "Disabled"}
+      - privesc40 (orgpolicy.policy.set): ${var.enable_privesc40 ? "Enabled" : "Disabled"}
 
     Privilege Escalation Paths Created:
     ${join("\n    ", [for name, email in module.privesc-paths.privesc_service_accounts : "- ${name}: ${email}"])}
-
-    Tool Testing Resources:
-    ${join("\n    ", [for name, email in module.tool-testing.test_service_accounts : "- ${name}: ${email}"])}
-
-    ====================================================================
-    Test with FoxMapper:
-      foxmapper gcp graph create --project ${var.gcp_project_id}
-      foxmapper gcp argquery --preset privesc --project ${var.gcp_project_id}
-    ====================================================================
 
   EOT
 }

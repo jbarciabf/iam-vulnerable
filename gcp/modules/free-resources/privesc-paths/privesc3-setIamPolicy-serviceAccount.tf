@@ -24,8 +24,8 @@ resource "google_service_account" "privesc3_set_sa_iam" {
 
 # Custom role for list/get at project level (discovery only)
 resource "google_project_iam_custom_role" "privesc3_sa_viewer" {
-  role_id     = "${var.resource_prefix}_3_saViewer"
-  title       = "Privesc3 - SA Viewer"
+  role_id     = "${var.resource_prefix}_03_saViewer"
+  title       = "Privesc03 - SA Viewer"
   description = "Can list and view service accounts"
   permissions = [
     "iam.serviceAccounts.list",
@@ -43,8 +43,8 @@ resource "google_project_iam_member" "privesc3_viewer" {
 
 # Custom role with setIamPolicy permission - granted at SA level only
 resource "google_project_iam_custom_role" "set_sa_iam_policy" {
-  role_id     = "${var.resource_prefix}_setSAIamPolicy"
-  title       = "Privesc3 - Set SA IAM Policy"
+  role_id     = "${var.resource_prefix}_03_setSAIamPolicy"
+  title       = "Privesc03 - Set SA IAM Policy"
   description = "Vulnerable: Can modify IAM policy on this specific service account"
   permissions = [
     "iam.serviceAccounts.getIamPolicy",

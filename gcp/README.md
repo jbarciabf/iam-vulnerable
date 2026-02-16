@@ -96,7 +96,7 @@ If you don't have an existing project, Terraform can create one for you:
 
 ### Optional: Setting Up a GCP Organization with Cloud Identity Free
 
-> **Note:** A GCP Organization is **not required** for most privilege escalation paths in this project. Only org-level paths like `orgpolicy.policy.set` (privesc42) require an organization to fully exploit. Skip this section if you just want to test project-level privesc.
+> **Note:** A GCP Organization is **not required** for most privilege escalation paths in this project. Only org-level paths like `orgpolicy.policy.set` (privesc44) require an organization to fully exploit. Skip this section if you just want to test project-level privesc.
 
 GCP Organizations cannot be created directly - they're automatically provisioned when you verify domain ownership through Google Workspace or Cloud Identity. Here's how to set one up for free using Cloud Identity Free:
 
@@ -194,75 +194,104 @@ To delete the organization later:
 
 ### Free Resources (Default)
 
-**43 Privilege Escalation Scenarios** grouped by GCP service:
+**45 Privilege Escalation Scenarios** grouped by GCP service:
 
-| # | Scenario | Permission(s) | Exploit Cost | Status |
-|---|----------|---------------|--------------|--------|
-| **IAM Service Account** | | | | |
-| 1 | setIamPolicy-project | `resourcemanager.projects.setIamPolicy` | Free | Enabled |
-| 2 | createServiceAccountKey | `iam.serviceAccountKeys.create` | Free | Enabled |
-| 3 | setIamPolicy-serviceAccount | `iam.serviceAccounts.setIamPolicy` | Free | Enabled |
-| 4 | getAccessToken | `iam.serviceAccounts.getAccessToken` | Free | Enabled |
-| 5 | signBlob | `iam.serviceAccounts.signBlob` | Free | Enabled |
-| 6 | signJwt | `iam.serviceAccounts.signJwt` | Free | Enabled |
-| 7 | implicitDelegation | `iam.serviceAccounts.implicitDelegation` | Free | Enabled |
-| 8 | getOpenIdToken | `iam.serviceAccounts.getOpenIdToken` | Free | Enabled |
-| 9 | updateRole | `iam.roles.update` | Free | Enabled |
-| **Compute Engine** | | | | |
-| 10 | actAs-compute | `actAs` + `compute.instances.create` | ~$0.01/hr | Enabled |
-| 11 | setMetadata-compute | `compute.instances.setMetadata` | ~$2-5/mo | Disabled |
-| 12 | osLogin | `compute.instances.osAdminLogin` | ~$2-5/mo | Disabled |
-| 13 | setServiceAccount | `compute.instances.setServiceAccount` | ~$2-5/mo | Disabled |
-| 14 | instanceTemplates.create | `compute.instanceTemplates.create` | ~$0.01/hr | Enabled |
-| **Cloud Functions** | | | | |
-| 15 | actAs-cloudfunction | `actAs` + `cloudfunctions.functions.create` | Free tier | Enabled |
-| 16 | updateFunction | `cloudfunctions.functions.update` | Free | Disabled |
-| 17 | sourceCodeSet | `cloudfunctions.functions.sourceCodeSet` | Free | Disabled |
-| **Cloud Run** | | | | |
-| 18 | actAs-cloudrun | `actAs` + `run.services.create` | Free tier | Enabled |
-| 19 | run.services.update | `run.services.update` | Free | Disabled |
-| 20 | run.jobs.create | `run.jobs.create` + `actAs` | Free tier | Enabled |
-| **Cloud Build** | | | | |
-| 21 | actAs-cloudbuild | `actAs` + `cloudbuild.builds.create` | Free tier | Enabled |
-| 22 | cloudbuild.triggers.create | `cloudbuild.builds.create` via trigger | Free | Enabled |
-| **Storage** | | | | |
-| 23 | setIamPolicy-bucket | `storage.buckets.setIamPolicy` | Free | Enabled |
-| 24 | storage.objects.create | Write to sensitive bucket | Free | Enabled |
-| **Secret Manager** | | | | |
-| 25 | secretManager | `secretmanager.versions.access` | Free | Enabled |
-| 26 | secretManager.setIamPolicy | `secretmanager.secrets.setIamPolicy` | Free | Enabled |
-| **Pub/Sub** | | | | |
-| 27 | setIamPolicy-pubsub | `pubsub.topics.setIamPolicy` | Free | Enabled |
-| **Cloud Scheduler** | | | | |
-| 28 | cloudScheduler | `cloudscheduler.jobs.create` | Free tier | Enabled |
-| **Deployment Manager** | | | | |
-| 29 | deploymentManager | `deploymentmanager.deployments.create` | Free | Enabled |
-| **Composer** | | | | |
-| 30 | composer | `composer.environments.create` | ~$300/mo | Enabled |
-| **Dataflow** | | | | |
-| 31 | dataflow | `dataflow.jobs.create` | ~$0.05/hr | Enabled |
-| **Dataproc** | | | | |
-| 32 | dataproc.clusters.create | `dataproc.clusters.create` + `actAs` | ~$0.10/hr | Enabled |
-| 33 | dataproc.jobs.create | `dataproc.jobs.create` | Free | Enabled |
-| **GKE/Kubernetes** | | | | |
-| 34 | container.clusters.create | `container.clusters.create` + `actAs` | ~$70/mo | Enabled |
-| 35 | container.clusters.getCredentials | Access GKE cluster | Free | Enabled |
-| **Vertex AI / AI Platform** | | | | |
-| 36 | notebooks.instances.create | `notebooks.instances.create` + `actAs` | ~$25/mo | Enabled |
-| 37 | aiplatform.customJobs.create | `aiplatform.customJobs.create` | Varies | Enabled |
-| **Cloud Workflows** | | | | |
-| 38 | workflows.workflows.create | `workflows.workflows.create` + `actAs` | Free tier | Enabled |
-| **Eventarc** | | | | |
-| 39 | eventarc.triggers.create | `eventarc.triggers.create` | Free | Enabled |
-| **BigQuery** | | | | |
-| 40 | bigquery.datasets.setIamPolicy | `bigquery.datasets.setIamPolicy` | Free | Enabled |
-| **Workload Identity** | | | | |
-| 41 | workloadIdentityPoolProviders | Federation abuse | Free | Enabled |
-| **Org Policy** | | | | |
-| 42 | orgpolicy.policy.set | `orgpolicy.policy.set` | Free | Disabled |
-| **Deny Bypass** | | | | |
-| 43 | explicitDeny-bypass | SA chaining | Free | Enabled |
+| # | Scenario | Starting Endpoint | Permission(s) | Exploit Cost | Status |
+|---|----------|---------------|---------------|--------------|--------|
+| **IAM Service Account** | | | | | |
+| 1 | setIamPolicy-project | `privesc1-set-iam-policy@PROJECT_ID.iam.gserviceaccount.com` | `resourcemanager.projects.setIamPolicy` | Free | Enabled |
+| 2 | createServiceAccountKey | `privesc2-create-sa-key@PROJECT_ID.iam.gserviceaccount.com` | `iam.serviceAccountKeys.create` | Free | Enabled |
+| 3 | setIamPolicy-serviceAccount | `privesc3-set-sa-iam@PROJECT_ID.iam.gserviceaccount.com` | `iam.serviceAccounts.setIamPolicy` | Free | Enabled |
+| 4 | getAccessToken | `privesc4-get-access-token@PROJECT_ID.iam.gserviceaccount.com` | `iam.serviceAccounts.getAccessToken` | Free | Enabled |
+| 5 | signBlob | `privesc5-sign-blob@PROJECT_ID.iam.gserviceaccount.com` | `iam.serviceAccounts.signBlob` | Free | Enabled |
+| 6 | signJwt | `privesc6-sign-jwt@PROJECT_ID.iam.gserviceaccount.com` | `iam.serviceAccounts.signJwt` | Free | Enabled |
+| 7 | implicitDelegation | `privesc7-implicit-delegation@PROJECT_ID.iam.gserviceaccount.com` | `iam.serviceAccounts.implicitDelegation` | Free | Enabled |
+| 8 | getOpenIdToken | `privesc8-get-oidc-token@PROJECT_ID.iam.gserviceaccount.com` | `iam.serviceAccounts.getOpenIdToken` | Free | Enabled |
+| 9 | updateRole | `privesc9-update-role@PROJECT_ID.iam.gserviceaccount.com` | `iam.roles.update` | Free | Enabled |
+| **Compute Engine** | | | | | |
+| 10 | actAs-compute | `privesc10-actas-compute@PROJECT_ID.iam.gserviceaccount.com` | `actAs` + `compute.instances.create`* | ~$0.01/hr | Enabled |
+| 11a | setMetadata (gcloud ssh) | `privesc11a-set-metadata@PROJECT_ID.iam.gserviceaccount.com` | `compute.instances.setMetadata` | ~$2-5/mo | Disabled |
+| 11b | setMetadata (manual key) | `privesc11b-set-metadata@PROJECT_ID.iam.gserviceaccount.com` | `compute.instances.setMetadata` | ~$2-5/mo | Disabled |
+| 12 | setCommonInstanceMetadata | `privesc12-set-proj-meta@PROJECT_ID.iam.gserviceaccount.com` | `compute.projects.setCommonInstanceMetadata`* | ~$2-5/mo | Disabled |
+| 13 | existingSSH | `privesc13-existing-ssh@PROJECT_ID.iam.gserviceaccount.com` | Existing SSH key access* | ~$2-5/mo | Disabled |
+| 14 | osLogin | `privesc14-os-login@PROJECT_ID.iam.gserviceaccount.com` | `compute.instances.osAdminLogin`* | ~$2-5/mo | Disabled |
+| 15 | setServiceAccount | `privesc15-set-sa@PROJECT_ID.iam.gserviceaccount.com` | `actAs` + `compute.instances.setServiceAccount` | ~$2-5/mo | Disabled |
+| 16a | instanceTemplates (persistence) | `privesc16a-inst-templ@PROJECT_ID.iam.gserviceaccount.com` | `actAs` + `compute.instanceTemplates.create`* | Free | Enabled |
+| 16b | instanceTemplates + instances | `privesc16b-inst-templ@PROJECT_ID.iam.gserviceaccount.com` | `actAs` + `instanceTemplates.create` + `instances.create`* | ~$0.01/hr | Enabled |
+| 16c | instanceTemplates + MIG | `privesc16c-inst-templ@PROJECT_ID.iam.gserviceaccount.com` | `actAs` + `instanceTemplates.create` + `instanceGroupManagers.create`* | ~$0.01/hr | Enabled |
+| **Cloud Functions** | | | | | |
+| 17 | actAs-cloudfunction | `privesc17-actas-function@PROJECT_ID.iam.gserviceaccount.com` | `actAs` + `cloudfunctions.functions.create`* | Free tier | Enabled |
+| 18 | updateFunction | `privesc18-update-function@PROJECT_ID.iam.gserviceaccount.com` | `cloudfunctions.functions.update` | Free | Disabled |
+| **Cloud Run** | | | | | |
+| 19 | actAs-cloudrun | `privesc19-actas-cloudrun@PROJECT_ID.iam.gserviceaccount.com` | `actAs` + `run.services.create`* | <$0.10/mo | Disabled |
+| 20 | run.services.update | `privesc20-run-update@PROJECT_ID.iam.gserviceaccount.com` | `run.services.update` | <$0.10/mo | Disabled |
+| 21 | run.jobs.create | `privesc21-run-jobs@PROJECT_ID.iam.gserviceaccount.com` | `actAs` + `run.jobs.create` | <$0.10/mo | Disabled |
+| 22 | run.jobs.update | `privesc22-run-jobs-update@PROJECT_ID.iam.gserviceaccount.com` | `run.jobs.update` + `actAs`* | <$0.10/mo | Disabled |
+| **Cloud Build** | | | | | |
+| 23a | actAs-cloudbuild (direct) | `privesc23a-actas-cloudbuild@PROJECT_ID.iam.gserviceaccount.com` | `actAs` + `cloudbuild.builds.create`* | Free tier | Enabled |
+| 23b | cloudbuild.triggers (persistent) | `privesc23b-triggers@PROJECT_ID.iam.gserviceaccount.com` | `actAs` + `cloudbuild.builds.create` | Free | Enabled |
+| 24 | cloudbuild.builds.update | `privesc24-builds-update@PROJECT_ID.iam.gserviceaccount.com` | `actAs` + `cloudbuild.builds.update` | Free | Enabled |
+| **Cloud Scheduler** | | | | | |
+| 25 | cloudScheduler | `privesc25-scheduler@PROJECT_ID.iam.gserviceaccount.com` | `actAs` + `cloudscheduler.jobs.create` | Free tier | Enabled |
+| **Deployment Manager** *(End of support: March 31, 2026)* | | | | | |
+| 27 | deploymentManager (create) | `privesc27-deployment-manager@PROJECT_ID.iam.gserviceaccount.com` | `actAs` + `deploymentmanager.deployments.create`* | Free | Enabled |
+| 28 | deploymentManager (update) | `privesc28-dm-update@PROJECT_ID.iam.gserviceaccount.com` | `actAs` + `deploymentmanager.deployments.update` | ~$0.02/mo | Disabled |
+| **Composer** | | | | | |
+| 29 | composer | `privesc29-composer@PROJECT_ID.iam.gserviceaccount.com` | `actAs` + `composer.environments.create` | ~$300/mo | Enabled |
+| **Dataflow** | | | | | |
+| 30 | dataflow | `privesc30-dataflow@PROJECT_ID.iam.gserviceaccount.com` | `actAs` + `dataflow.jobs.create`* | ~$0.05/hr | Enabled |
+| **Dataproc** | | | | | |
+| 31 | dataproc.clusters.create | `privesc31-dataproc@PROJECT_ID.iam.gserviceaccount.com` | `actAs` + `dataproc.clusters.create` | ~$0.10/hr | Enabled |
+| 32 | dataproc.jobs.create | `privesc32-dataproc-jobs@PROJECT_ID.iam.gserviceaccount.com` | `dataproc.jobs.create` | Free | Enabled |
+| **GKE/Kubernetes** | | | | | |
+| 33 | container.clusters.create | `privesc33-gke@PROJECT_ID.iam.gserviceaccount.com` | `actAs` + `container.clusters.create` | ~$70/mo | Enabled |
+| 34 | container.clusters.getCredentials | `privesc34-gke-creds@PROJECT_ID.iam.gserviceaccount.com` | `container.clusters.getCredentials` | Free | Enabled |
+| **Vertex AI / AI Platform** | | | | | |
+| 35 | notebooks.instances.create | `privesc35-notebooks@PROJECT_ID.iam.gserviceaccount.com` | `actAs` + `notebooks.instances.create` | ~$25/mo | Enabled |
+| 36 | aiplatform.customJobs.create | `privesc36-aiplatform@PROJECT_ID.iam.gserviceaccount.com` | `actAs` + `aiplatform.customJobs.create` | Varies | Enabled |
+| **Cloud Workflows** | | | | | |
+| 37 | workflows.workflows.create | `privesc37-workflows@PROJECT_ID.iam.gserviceaccount.com` | `actAs` + `workflows.workflows.create` | Free tier | Enabled |
+| **Eventarc** | | | | | |
+| 38 | eventarc.triggers.create | `privesc38-eventarc@PROJECT_ID.iam.gserviceaccount.com` | `actAs` + `eventarc.triggers.create` | Free | Enabled |
+| **Workload Identity** | | | | | |
+| 39 | workloadIdentityPoolProviders | `privesc39-workload-identity@PROJECT_ID.iam.gserviceaccount.com` | `iam.workloadIdentityPoolProviders.create` | Free | Enabled |
+| **Org Policy** | | | | | |
+| 40 | orgpolicy.policy.set | `privesc40-org-policy@PROJECT_ID.iam.gserviceaccount.com` | `orgpolicy.policy.set` | Free | Disabled |
+| **Deny Bypass** | | | | | |
+| 41 | explicitDeny-bypass | `privesc41-deny-bypass@PROJECT_ID.iam.gserviceaccount.com` | SA chaining | Free | Enabled |
 
+#### Lateral Movement Paths (Honorable Mentions)
+
+These paths demonstrate **data access and lateral movement**, NOT privilege escalation. They allow accessing sensitive data but don't grant higher IAM privileges.
+
+| # | Name | Service Account | Vulnerable Permission | Category |
+|---|------|-----------------|----------------------|----------|
+| L1 | setIamPolicy-bucket | `lateral1-bucket-iam@PROJECT_ID.iam.gserviceaccount.com` | `storage.buckets.setIamPolicy` | Data Access |
+| L2 | storage.objects.create | `lateral2-storage-write@PROJECT_ID.iam.gserviceaccount.com` | `storage.objects.create` | Persistence |
+| L3 | secretManager.access | `lateral3-secret-access@PROJECT_ID.iam.gserviceaccount.com` | `secretmanager.versions.access` | Data Exfil |
+| L4 | secretManager.setIamPolicy | `lateral4-secret-setiam@PROJECT_ID.iam.gserviceaccount.com` | `secretmanager.secrets.setIamPolicy` | Data Access |
+| L5 | setIamPolicy-pubsub | `lateral5-pubsub-iam@PROJECT_ID.iam.gserviceaccount.com` | `pubsub.topics.setIamPolicy` | Data Access |
+| L6 | bigquery.setIamPolicy | `lateral6-bq-setiam@PROJECT_ID.iam.gserviceaccount.com` | `bigquery.datasets.setIamPolicy` | Data Access |
+
+> **Permission Notes:**
+> - `*` = Requires supporting permissions beyond the vulnerable permission. See [EXPLOITATION_GUIDE.md](EXPLOITATION_GUIDE.md) for details.
+>   - Path 10: Exploitation requires `compute.disks.create`, `compute.instances.setServiceAccount`. Completion requires `compute.subnetworks.use`, `compute.subnetworks.useExternalIp`, `compute.instances.setMetadata` (or use paths 11a-14)
+>   - Path 12: Also requires `compute.projects.get`, `compute.instances.list`, `compute.instances.get`, `compute.zones.list`
+>   - Path 13: Also requires `compute.instances.list`, `compute.instances.get`, `compute.zones.list`, `compute.projects.get`
+>   - Path 14: Also requires `roles/compute.viewer` (`compute.instances.get`, `compute.instances.list`, etc.)
+>   - Path 16a: Also requires `compute.networks.get`, `compute.subnetworks.get`
+>   - Path 16b: Exploitation requires `compute.networks.get`, `compute.subnetworks.get`, `compute.disks.create`, `compute.instances.setServiceAccount`. Completion requires `compute.subnetworks.use`, `compute.subnetworks.useExternalIp`, `compute.instances.setMetadata`
+>   - Path 16c: Exploitation requires `compute.networks.get`, `compute.subnetworks.get`, `compute.instances.create`, `compute.instances.setServiceAccount`, `compute.disks.create`. Completion requires `compute.subnetworks.use`, `compute.subnetworks.useExternalIp`, `compute.instances.setMetadata`
+>   - Path 17: Also requires `cloudfunctions.functions.get`, `cloudfunctions.functions.sourceCodeSet`, `cloudfunctions.operations.get`
+>   - Path 20: Also requires `run.services.get`, `run.operations.get`, `run.revisions.get`
+>   - Path 21: Also requires `run.jobs.get`, `run.jobs.run`, `run.executions.get`
+>   - Path 22: Also requires `run.jobs.get`, `run.jobs.run`, `run.executions.get`
+>   - Path 23a: Also requires `cloudbuild.builds.get`
+>   - Path 23b: Also requires `cloudbuild.builds.get`, `cloudbuild.builds.list`
+>   - Path 24: Also requires `cloudbuild.builds.get`, `cloudbuild.builds.list`, `serviceusage.services.use`. Requires `iam.serviceAccounts.actAs` on both the original and new SA when swapping service accounts.
+>   - Path 26: Also requires `deploymentmanager.deployments.get`, `deploymentmanager.operations.get`, `deploymentmanager.manifests.get`
+>   - Path 28: Also requires `dataflow.jobs.get`
+>
 > **Status Legend:**
 > - **Enabled** = IAM resources created by default, exploitable immediately
 > - **Disabled** = Requires opt-in variable (see below)
@@ -270,13 +299,18 @@ To delete the organization later:
 > **Disabled Paths - Enable individually:**
 > | Path | Variable | Creates | Cost |
 > |------|----------|---------|------|
-> | 11 | `enable_privesc11 = true` | VM + IAM | ~$2-5/mo |
+> | 11a | `enable_privesc11a = true` | VM + IAM | ~$2-5/mo |
+> | 11b | `enable_privesc11b = true` | VM + IAM | ~$2-5/mo |
 > | 12 | `enable_privesc12 = true` | VM + IAM | ~$2-5/mo |
 > | 13 | `enable_privesc13 = true` | VM + IAM | ~$2-5/mo |
-> | 16 | `enable_privesc16 = true` | Function + IAM | Free (idle) |
-> | 17 | `enable_privesc17 = true` | Function + IAM | Free (idle) |
-> | 19 | `enable_privesc19 = true` | Cloud Run + IAM | Free (idle) |
-> | 42 | `enable_privesc42 = true` | IAM only | Free (requires `gcp_organization_id`) |
+> | 14 | `enable_privesc14 = true` | VM + IAM | ~$2-5/mo |
+> | 15 | `enable_privesc15 = true` | VM + IAM | ~$2-5/mo |
+> | 18 | `enable_privesc18 = true` | Function + IAM | Free (idle) |
+> | 19 | `enable_privesc19 = true` | Cloud Run + Artifact Registry + IAM | <$0.10/mo |
+> | 20 | `enable_privesc20 = true` | Cloud Run + Artifact Registry + IAM | <$0.10/mo |
+> | 21 | `enable_privesc21 = true` | Cloud Run + Artifact Registry + IAM | <$0.10/mo |
+> | 22 | `enable_privesc22 = true` | Cloud Run + Artifact Registry + IAM | <$0.10/mo |
+> | 38 | `enable_privesc38 = true` | IAM only | Free (requires `gcp_organization_id`) |
 >
 > **Note:** "Exploit Cost" is what it costs to actually exploit the path. "Enabled" paths create only IAM resources (free) but exploitation may create billable resources (e.g., privesc10 creates a VM when exploited).
 
@@ -292,39 +326,44 @@ Some privesc paths are disabled by default because they require target infrastru
 gcp_project_id = "your-test-project-id"
 
 # Compute-based paths (creates VM, ~$2-5/mo)
-enable_privesc11 = true  # setMetadata-compute
-enable_privesc12 = true  # osLogin
-enable_privesc13 = true  # setServiceAccount
+enable_privesc11a = true  # setMetadata (gcloud ssh)
+enable_privesc11b = true  # setMetadata (manual key injection)
+enable_privesc12 = true   # setCommonInstanceMetadata (project-level)
+enable_privesc13 = true   # existingSSH
+enable_privesc14 = true   # osLogin
+enable_privesc15 = true   # setServiceAccount
 
 # Cloud Functions paths (creates function, free when idle)
-enable_privesc16 = true  # updateFunction
-enable_privesc17 = true  # sourceCodeSet
+enable_privesc18 = true  # updateFunction
 
-# Cloud Run paths (creates service, free when idle)
-enable_privesc19 = true  # run.services.update
+# Cloud Run paths (creates service + token-extractor image, <$0.10/mo)
+enable_privesc19 = true  # actAs + run.services.create
+enable_privesc20 = true  # run.services.update
+enable_privesc21 = true  # run.jobs.create
+enable_privesc22 = true  # run.jobs.update
 
 # Organization paths (requires gcp_organization_id)
 # gcp_organization_id = "123456789012"
-# enable_privesc42 = true  # orgpolicy.policy.set
+# enable_privesc44 = true  # orgpolicy.policy.set
 ```
 
 **Or via command line:**
 ```bash
-terraform apply -parallelism=2 -var="enable_privesc11=true" -var="enable_privesc12=true" -var="gcp_project_id=iam-vulnerable"
+terraform apply -parallelism=2 -var="enable_privesc11a=true" -var="enable_privesc11b=true" -var="gcp_project_id=iam-vulnerable"
 
-# With organization (for privesc42)
-terraform apply -parallelism=2 -var="gcp_project_id=iam-vulnerable" -var="gcp_organization_id=123456789012" -var="enable_privesc42=true"
+# With organization (for privesc44)
+terraform apply -parallelism=2 -var="gcp_project_id=iam-vulnerable" -var="gcp_organization_id=123456789012" -var="enable_privesc44=true"
 ```
 
 ## Cost Summary
 
 | Configuration | Cost/Hour | Cost/Month |
 |---------------|-----------|------------|
-| **Default (43 IAM paths only)** | **$0.00** | **$0** |
+| **Default (33 IAM paths only)** | **$0.00** | **$0** |
 | + Compute module (preemptible) | +$0.002 | +$2-3 |
 | + Compute module (standard) | +$0.008 | +$6-7 |
 | + Cloud Functions (idle) | +$0.00 | Free tier |
-| + Cloud Run (idle) | +$0.00 | Free tier |
+| + Cloud Run paths 19-22 | +$0.00 | <$0.10 |
 | **All modules enabled** | ~$0.01 | ~$5-10 |
 
 **Note:** The default deployment creates only IAM resources (service accounts, custom roles, IAM bindings) which are **completely free**. Non-free modules must be explicitly enabled.
@@ -378,7 +417,7 @@ sleep 60 && terraform apply -parallelism=2
 
 ### Organization Policy Errors
 
-The `orgpolicy.policy.set` permission cannot be used in custom roles - this is a GCP limitation. The privesc42 path uses the predefined `roles/orgpolicy.policyAdmin` role instead.
+The `orgpolicy.policy.set` permission cannot be used in custom roles - this is a GCP limitation. The privesc44 path uses the predefined `roles/orgpolicy.policyAdmin` role instead.
 
 **Note:** Actually modifying organization policies requires:
 1. A GCP Organization (tied to a verified domain via Google Workspace or Cloud Identity)
@@ -415,7 +454,7 @@ cd cleanup-scripts
 
 ## Exploitation Quick Start
 
-This section provides a quick introduction to exploiting the privilege escalation paths. For complete step-by-step instructions for all 43 scenarios, see [EXPLOITATION_GUIDE.md](EXPLOITATION_GUIDE.md).
+This section provides a quick introduction to exploiting the privilege escalation paths. For complete step-by-step instructions for all 45 scenarios, see [EXPLOITATION_GUIDE.md](EXPLOITATION_GUIDE.md).
 
 ### How It Works
 
@@ -462,7 +501,7 @@ gcloud config unset auth/impersonate_service_account
 ```bash
 # Impersonate the vulnerable SA
 gcloud config set auth/impersonate_service_account \
-  privesc2-create-key@$PROJECT_ID.iam.gserviceaccount.com
+  privesc2-create-sa-key@$PROJECT_ID.iam.gserviceaccount.com
 
 # Create a key for the high-priv SA
 gcloud iam service-accounts keys create key.json \
@@ -488,7 +527,7 @@ gcloud auth print-access-token \
 ### Next Steps
 
 See [EXPLOITATION_GUIDE.md](EXPLOITATION_GUIDE.md) for:
-- Detailed exploitation steps for all 43 scenarios
+- Detailed exploitation steps for all 45 scenarios
 - Service-specific attack patterns (Compute, Functions, Run, Build, etc.)
 - Quick reference table of all service account emails
 
@@ -506,7 +545,7 @@ gcp/
 │   └── cleanup_iam_vulnerable.py
 └── modules/
     ├── free-resources/
-    │   ├── privesc-paths/     # 43 privilege escalation paths
+    │   ├── privesc-paths/     # 45 privilege escalation paths
     │   │   ├── common.tf      # Shared resources
     │   │   ├── privesc1-*.tf  # Individual paths
     │   │   └── ...

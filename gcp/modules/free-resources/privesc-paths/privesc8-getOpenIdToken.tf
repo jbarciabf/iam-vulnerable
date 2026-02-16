@@ -25,8 +25,8 @@ resource "google_service_account" "privesc8_get_oidc_token" {
 
 # Create a custom role with just getOpenIdToken
 resource "google_project_iam_custom_role" "privesc8_oidc_creator" {
-  role_id     = "${var.resource_prefix}_8_oidc_creator"
-  title       = "Privesc8 OIDC Token Creator"
+  role_id     = "${var.resource_prefix}_08_oidc_creator"
+  title       = "Privesc08 OIDC Token Creator"
   description = "Can generate OIDC tokens for service accounts"
   project     = var.project_id
 

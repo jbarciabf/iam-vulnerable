@@ -30,3 +30,40 @@ variable "resource_prefix" {
   type        = string
   default     = "privesc"
 }
+
+# Per-path instance toggles
+variable "enable_privesc11a" {
+  description = "Create instance for privesc11a (setMetadata gcloud ssh)"
+  type        = bool
+  default     = false
+}
+
+variable "enable_privesc11b" {
+  description = "Create instance for privesc11b (setMetadata manual)"
+  type        = bool
+  default     = false
+}
+
+variable "enable_privesc12" {
+  description = "Create instance for privesc12 (setCommonInstanceMetadata)"
+  type        = bool
+  default     = false
+}
+
+variable "enable_privesc13" {
+  description = "Create instance for privesc13 (existingSSH)"
+  type        = bool
+  default     = false
+}
+
+variable "enable_privesc14" {
+  description = "Create instance for privesc14 (osLogin)"
+  type        = bool
+  default     = false
+}
+
+variable "enable_privesc15" {
+  description = "Create instance for privesc15 (setServiceAccount)"
+  type        = bool
+  default     = false
+}

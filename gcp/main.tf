@@ -84,19 +84,27 @@ module "privesc-paths" {
   attacker_member = local.attacker_member
 
   # Individual privesc path toggles (disabled by default)
-  enable_privesc11 = var.enable_privesc11
-  enable_privesc12 = var.enable_privesc12
-  enable_privesc13 = var.enable_privesc13
-  enable_privesc16 = var.enable_privesc16
-  enable_privesc17 = var.enable_privesc17
-  enable_privesc19 = var.enable_privesc19
-  enable_privesc42 = var.enable_privesc42
+  enable_privesc11a = var.enable_privesc11a
+  enable_privesc11b = var.enable_privesc11b
+  enable_privesc12  = var.enable_privesc12
+  enable_privesc13  = var.enable_privesc13
+  enable_privesc14  = var.enable_privesc14
+  enable_privesc15  = var.enable_privesc15
+  enable_privesc18  = var.enable_privesc18
+  enable_privesc19  = var.enable_privesc19
+  enable_privesc20  = var.enable_privesc20
+  enable_privesc21  = var.enable_privesc21
+  enable_privesc22  = var.enable_privesc22
+  enable_privesc26  = var.enable_privesc26
+  enable_privesc28  = var.enable_privesc28
+  enable_privesc40  = var.enable_privesc40
 
   depends_on = [google_project_service.serviceusage]
 }
 
 module "tool-testing" {
   source = "./modules/free-resources/tool-testing"
+  count  = var.enable_tool_testing ? 1 : 0
 
   project_id      = var.gcp_project_id
   project_number  = local.project_number
@@ -111,12 +119,12 @@ module "tool-testing" {
 # TARGET INFRASTRUCTURE - Created when corresponding privesc paths are enabled
 # =============================================================================
 
-# Compute Engine instance for privesc11/12/13 (setMetadata, osLogin, setServiceAccount)
+# Compute Engine instance for privesc11a/11b/12/13/14/15 (setMetadata, osLogin, setServiceAccount)
 # Created when any compute-based privesc path is enabled
 # Cost: ~$2-5/month (preemptible e2-micro)
 module "compute" {
   source = "./modules/non-free-resources/compute"
-  count  = (var.enable_privesc11 || var.enable_privesc12 || var.enable_privesc13) ? 1 : 0
+  count  = (var.enable_privesc11a || var.enable_privesc11b || var.enable_privesc12 || var.enable_privesc13 || var.enable_privesc14 || var.enable_privesc15) ? 1 : 0
 
   project_id      = var.gcp_project_id
   region          = var.gcp_region
@@ -124,14 +132,22 @@ module "compute" {
   attacker_member = local.attacker_member
 
   high_priv_sa_email = module.privesc-paths.high_priv_service_account_email
+
+  # Per-path instance flags
+  enable_privesc11a = var.enable_privesc11a
+  enable_privesc11b = var.enable_privesc11b
+  enable_privesc12  = var.enable_privesc12
+  enable_privesc13  = var.enable_privesc13
+  enable_privesc14  = var.enable_privesc14
+  enable_privesc15  = var.enable_privesc15
 }
 
-# Cloud Function for privesc16/17 (updateFunction, sourceCodeSet)
-# Created when any function-based privesc path is enabled
+# Cloud Function for privesc18 (updateFunction)
+# Created when function-based privesc path is enabled
 # Cost: Free when idle (pay per invocation)
 module "cloud-functions" {
   source = "./modules/non-free-resources/cloud-functions"
-  count  = (var.enable_privesc16 || var.enable_privesc17) ? 1 : 0
+  count  = var.enable_privesc18 ? 1 : 0
 
   project_id      = var.gcp_project_id
   region          = var.gcp_region
@@ -140,16 +156,31 @@ module "cloud-functions" {
   high_priv_sa_email = module.privesc-paths.high_priv_service_account_email
 }
 
-# Cloud Run service for privesc19 (run.services.update)
-# Created when Cloud Run privesc path is enabled
-# Cost: Free when idle (scales to zero)
+# Cloud Run infrastructure for privesc19/20/21/22 (run.services.create/update, run.jobs.create/update)
+# Created when any Cloud Run privesc path is enabled
+# Cost: < $0.10/month (Cloud Build, Artifact Registry, Cloud Run all have generous free tiers)
+# Includes:
+#   - Token-extractor container image (built via Cloud Build)
+#   - Target Cloud Run service running as high-priv SA (path 20 only)
+#   - Target Cloud Run job running as high-priv SA (path 22 only)
 module "cloud-run" {
   source = "./modules/non-free-resources/cloud-run"
-  count  = var.enable_privesc19 ? 1 : 0
+  count  = (var.enable_privesc19 || var.enable_privesc20 || var.enable_privesc21 || var.enable_privesc22) ? 1 : 0
 
   project_id      = var.gcp_project_id
   region          = var.gcp_region
   attacker_member = local.attacker_member
 
   high_priv_sa_email = module.privesc-paths.high_priv_service_account_email
+
+  # Pass SA emails for Artifact Registry access
+  privesc19_sa_email = module.privesc-paths.privesc19_sa_email
+  privesc20_sa_email = module.privesc-paths.privesc20_sa_email
+  privesc21_sa_email = module.privesc-paths.privesc21_sa_email
+  privesc22_sa_email = module.privesc-paths.privesc22_sa_email
+
+  # Only create target service for path 20
+  enable_privesc20 = var.enable_privesc20
+  # Only create target job for path 22
+  enable_privesc22 = var.enable_privesc22
 }

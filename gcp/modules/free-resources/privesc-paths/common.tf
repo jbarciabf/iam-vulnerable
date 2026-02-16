@@ -93,14 +93,14 @@ resource "google_project_iam_member" "high_priv_owner" {
 }
 
 # =============================================================================
-# MEDIUM-PRIVILEGE SERVICE ACCOUNT
+# MEDIUM-PRIVILEGE SERVICE ACCOUNT (for Path 7 - Implicit Delegation)
 # =============================================================================
-# Used for certain escalation paths that require intermediate privileges
+# Used as intermediate hop in the delegation chain for privesc path 7
 
 resource "google_service_account" "medium_priv" {
-  account_id   = "${var.resource_prefix}-medium-priv-sa"
-  display_name = "Medium Privilege Service Account"
-  description  = "Intermediate privilege service account for escalation chains"
+  account_id   = "${var.resource_prefix}7-medium-priv-sa"
+  display_name = "Privesc7 - Medium Privilege SA"
+  description  = "Intermediate SA for path 7 implicit delegation chain"
   project      = var.project_id
 
   depends_on = [time_sleep.batch1_delay]

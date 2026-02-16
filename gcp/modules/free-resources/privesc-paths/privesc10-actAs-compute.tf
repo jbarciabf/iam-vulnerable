@@ -12,6 +12,16 @@
 # DETECTION: FoxMapper detects this via the actAs + compute edge checker
 #
 # REAL-WORLD IMPACT: Critical - Common escalation path in GCP
+#
+# PERMISSIONS BREAKDOWN:
+#   Primary (Vulnerable):
+#     - iam.serviceAccounts.actAs (via roles/iam.serviceAccountUser on target SA)
+#     - compute.instances.create
+#   Supporting (Required for exploitation):
+#     - compute.disks.create (required to create boot disk)
+#     - compute.subnetworks.use (required to attach to network)
+#     - compute.subnetworks.useExternalIp (required for external IP / SSH access)
+#     - compute.instances.setMetadata (required for SSH key injection)
 
 resource "google_service_account" "privesc10_actas_compute" {
   account_id   = "${var.resource_prefix}10-actas-compute"
@@ -29,10 +39,34 @@ resource "google_service_account_iam_member" "privesc10_actas" {
   member             = "serviceAccount:${google_service_account.privesc10_actas_compute.email}"
 }
 
+# Custom role with minimal permissions for compute instance creation
+resource "google_project_iam_custom_role" "privesc10_compute" {
+  role_id     = "${var.resource_prefix}_10_compute"
+  title       = "Privesc10 - Compute Instance Create"
+  description = "Minimal permissions for compute instance creation with SA"
+  project     = var.project_id
+
+  permissions = [
+    # Primary permission (vulnerable)
+    "compute.instances.create",
+    # Supporting permissions (required for exploitation)
+    "compute.disks.create",
+    "compute.subnetworks.use",
+    "compute.subnetworks.useExternalIp",
+    "compute.instances.setMetadata",
+    "compute.instances.setServiceAccount",
+    # Utility permissions
+    "compute.instances.get",
+    "compute.instances.list",
+    "compute.instances.delete",
+    "compute.zones.list",
+  ]
+}
+
 # Grant compute instance creation permissions
 resource "google_project_iam_member" "privesc10_compute" {
   project = var.project_id
-  role    = "roles/compute.instanceAdmin.v1"
+  role    = google_project_iam_custom_role.privesc10_compute.id
   member  = "serviceAccount:${google_service_account.privesc10_actas_compute.email}"
 }
 

@@ -23,8 +23,8 @@ resource "google_service_account" "privesc2_create_key" {
 
 # Custom role with only list/get permissions at project level
 resource "google_project_iam_custom_role" "privesc2_sa_viewer" {
-  role_id     = "${var.resource_prefix}_2_saViewer"
-  title       = "Privesc2 - SA Viewer"
+  role_id     = "${var.resource_prefix}_02_saViewer"
+  title       = "Privesc02 - SA Viewer"
   description = "Can list and view service accounts"
   permissions = [
     "iam.serviceAccounts.list",
@@ -42,8 +42,8 @@ resource "google_project_iam_member" "privesc2_viewer" {
 
 # Custom role with createKey permission - granted at SA level only
 resource "google_project_iam_custom_role" "create_sa_key" {
-  role_id     = "${var.resource_prefix}_createSAKey"
-  title       = "Privesc2 - Create Service Account Key"
+  role_id     = "${var.resource_prefix}_02_createSAKey"
+  title       = "Privesc02 - Create Service Account Key"
   description = "Vulnerable: Can create keys for this specific service account"
   permissions = [
     "iam.serviceAccountKeys.create",

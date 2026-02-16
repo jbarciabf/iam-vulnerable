@@ -24,8 +24,8 @@ resource "google_service_account" "privesc5_sign_blob" {
 
 # Custom role for list/get at project level (discovery only)
 resource "google_project_iam_custom_role" "privesc5_sa_viewer" {
-  role_id     = "${var.resource_prefix}_5_saViewer"
-  title       = "Privesc5 - SA Viewer"
+  role_id     = "${var.resource_prefix}_05_saViewer"
+  title       = "Privesc05 - SA Viewer"
   description = "Can list and view service accounts"
   permissions = [
     "iam.serviceAccounts.list",
@@ -43,8 +43,8 @@ resource "google_project_iam_member" "privesc5_viewer" {
 
 # Custom role with signBlob permission - granted at SA level only
 resource "google_project_iam_custom_role" "sign_blob" {
-  role_id     = "${var.resource_prefix}_signBlob"
-  title       = "Privesc5 - Sign Blob"
+  role_id     = "${var.resource_prefix}_05_signBlob"
+  title       = "Privesc05 - Sign Blob"
   description = "Vulnerable: Can sign data as this specific service account"
   permissions = [
     "iam.serviceAccounts.signBlob",

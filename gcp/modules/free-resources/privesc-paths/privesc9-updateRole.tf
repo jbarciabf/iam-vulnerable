@@ -24,8 +24,8 @@ resource "google_service_account" "privesc9_update_role" {
 
 # Create a custom role that the SA has
 resource "google_project_iam_custom_role" "modifiable_role" {
-  role_id     = "${var.resource_prefix}_modifiableRole"
-  title       = "Privesc - Modifiable Role"
+  role_id     = "${var.resource_prefix}_09_modifiableRole"
+  title       = "Privesc09 - Modifiable Role"
   description = "A role that can be modified by its holder"
   permissions = [
     "resourcemanager.projects.get",

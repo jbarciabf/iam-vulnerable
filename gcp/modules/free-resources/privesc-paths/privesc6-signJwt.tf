@@ -24,8 +24,8 @@ resource "google_service_account" "privesc6_sign_jwt" {
 
 # Custom role for list/get at project level (discovery only)
 resource "google_project_iam_custom_role" "privesc6_sa_viewer" {
-  role_id     = "${var.resource_prefix}_6_saViewer"
-  title       = "Privesc6 - SA Viewer"
+  role_id     = "${var.resource_prefix}_06_saViewer"
+  title       = "Privesc06 - SA Viewer"
   description = "Can list and view service accounts"
   permissions = [
     "iam.serviceAccounts.list",
@@ -43,8 +43,8 @@ resource "google_project_iam_member" "privesc6_viewer" {
 
 # Custom role with signJwt permission - granted at SA level only
 resource "google_project_iam_custom_role" "sign_jwt" {
-  role_id     = "${var.resource_prefix}_signJwt"
-  title       = "Privesc6 - Sign JWT"
+  role_id     = "${var.resource_prefix}_06_signJwt"
+  title       = "Privesc06 - Sign JWT"
   description = "Vulnerable: Can sign JWTs as this specific service account"
   permissions = [
     "iam.serviceAccounts.signJwt",

@@ -24,8 +24,8 @@ resource "google_service_account" "privesc1_set_iam_policy" {
 
 # Custom role with the vulnerable permissions
 resource "google_project_iam_custom_role" "set_iam_policy" {
-  role_id     = "${var.resource_prefix}_setIamPolicy"
-  title       = "Privesc - Set Project IAM Policy"
+  role_id     = "${var.resource_prefix}_01_setIamPolicy"
+  title       = "Privesc01 - Set Project IAM Policy"
   description = "Vulnerable: Can read and modify project IAM policy"
   permissions = [
     "resourcemanager.projects.get",
