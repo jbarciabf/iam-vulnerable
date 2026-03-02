@@ -1,4 +1,4 @@
-# Privesc Path 36: AI Platform Custom Jobs
+# Privesc Path 37: AI Platform Custom Jobs
 #
 # VULNERABILITY: A service account with aiplatform.customJobs.create and actAs
 # can create Vertex AI custom training jobs that run with a high-privilege
@@ -18,9 +18,9 @@
 # NOTE: Creating AI Platform jobs incurs cost
 #       This path only creates the IAM configuration
 
-resource "google_service_account" "privesc36_aiplatform" {
-  account_id   = "${var.resource_prefix}36-aiplatform"
-  display_name = "Privesc36 - aiplatform.customJobs.create"
+resource "google_service_account" "privesc37_aiplatform" {
+  account_id   = "${var.resource_prefix}37-aiplatform"
+  display_name = "Privesc37 - aiplatform.customJobs.create"
   description  = "Can escalate via AI Platform custom jobs"
   project      = var.project_id
 
@@ -28,9 +28,9 @@ resource "google_service_account" "privesc36_aiplatform" {
 }
 
 # Create a custom role with AI Platform job permissions
-resource "google_project_iam_custom_role" "privesc36_aiplatform" {
-  role_id     = "${var.resource_prefix}_36_aiplatform"
-  title       = "Privesc36 AI Platform Job Creator"
+resource "google_project_iam_custom_role" "privesc37_aiplatform" {
+  role_id     = "${var.resource_prefix}_37_aiplatform"
+  title       = "Privesc37 AI Platform Job Creator"
   description = "Can create AI Platform custom jobs"
   project     = var.project_id
 
@@ -42,22 +42,22 @@ resource "google_project_iam_custom_role" "privesc36_aiplatform" {
 }
 
 # Grant the custom role at project level
-resource "google_project_iam_member" "privesc36_aiplatform" {
+resource "google_project_iam_member" "privesc37_aiplatform" {
   project = var.project_id
-  role    = google_project_iam_custom_role.privesc36_aiplatform.id
-  member  = "serviceAccount:${google_service_account.privesc36_aiplatform.email}"
+  role    = google_project_iam_custom_role.privesc37_aiplatform.id
+  member  = "serviceAccount:${google_service_account.privesc37_aiplatform.email}"
 }
 
 # Grant actAs on the high-privilege SA
-resource "google_service_account_iam_member" "privesc36_actas" {
+resource "google_service_account_iam_member" "privesc37_actas" {
   service_account_id = google_service_account.high_priv.name
   role               = "roles/iam.serviceAccountUser"
-  member             = "serviceAccount:${google_service_account.privesc36_aiplatform.email}"
+  member             = "serviceAccount:${google_service_account.privesc37_aiplatform.email}"
 }
 
 # Allow the attacker to impersonate this service account
-resource "google_service_account_iam_member" "privesc36_impersonate" {
-  service_account_id = google_service_account.privesc36_aiplatform.name
+resource "google_service_account_iam_member" "privesc37_impersonate" {
+  service_account_id = google_service_account.privesc37_aiplatform.name
   role               = "roles/iam.serviceAccountTokenCreator"
   member             = var.attacker_member
 }

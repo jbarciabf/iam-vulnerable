@@ -19,6 +19,8 @@
 #
 # DISABLED BY DEFAULT: Set enable_privesc28 = true to enable
 #
+# TARGET INFRASTRUCTURE: Created by modules/non-free-resources/deployment-manager
+#
 # PERMISSIONS BREAKDOWN:
 #   Primary (Vulnerable):
 #     - iam.serviceAccounts.actAs (via roles/iam.serviceAccountUser on target SA)
@@ -87,36 +89,4 @@ resource "google_service_account_iam_member" "privesc28_impersonate" {
   service_account_id = google_service_account.privesc28_dm_update[0].name
   role               = "roles/iam.serviceAccountTokenCreator"
   member             = var.attacker_member
-}
-
-# =============================================================================
-# TARGET INFRASTRUCTURE: Existing deployment to hijack
-# =============================================================================
-
-# Simple target deployment that can be modified via update
-# This creates a minimal GCS bucket - attacker will update to add a VM with high-priv SA
-resource "google_deployment_manager_deployment" "privesc28_target" {
-  count = var.enable_privesc28 ? 1 : 0
-
-  name    = "${var.resource_prefix}28-target"
-  project = var.project_id
-
-  target {
-    config {
-      content = <<-EOF
-        resources:
-        - name: ${var.resource_prefix}28-placeholder
-          type: storage.v1.bucket
-          properties:
-            name: ${var.project_id}-privesc28-placeholder
-            location: US
-            storageClass: STANDARD
-      EOF
-    }
-  }
-
-  labels {
-    key   = "purpose"
-    value = "privesc28-target"
-  }
 }

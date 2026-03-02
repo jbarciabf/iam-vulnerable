@@ -1,4 +1,4 @@
-# Privesc Path 32: Dataproc Jobs Create
+# Privesc Path 33: Dataproc Jobs Create
 #
 # VULNERABILITY: A service account with dataproc.jobs.create can submit
 # jobs to existing Dataproc clusters, executing code with the cluster's
@@ -15,9 +15,9 @@
 #
 # REAL-WORLD IMPACT: High - Code execution on existing Dataproc clusters
 
-resource "google_service_account" "privesc32_dataproc_jobs" {
-  account_id   = "${var.resource_prefix}32-dataproc-jobs"
-  display_name = "Privesc32 - dataproc.jobs.create"
+resource "google_service_account" "privesc33_dataproc_jobs" {
+  account_id   = "${var.resource_prefix}33-dataproc-jobs"
+  display_name = "Privesc33 - dataproc.jobs.create"
   description  = "Can escalate via dataproc.jobs.create"
   project      = var.project_id
 
@@ -25,9 +25,9 @@ resource "google_service_account" "privesc32_dataproc_jobs" {
 }
 
 # Create a custom role with Dataproc job permissions
-resource "google_project_iam_custom_role" "privesc32_dataproc_jobs" {
-  role_id     = "${var.resource_prefix}_32_dataproc_jobs"
-  title       = "Privesc32 Dataproc Job Submitter"
+resource "google_project_iam_custom_role" "privesc33_dataproc_jobs" {
+  role_id     = "${var.resource_prefix}_33_dataproc_jobs"
+  title       = "Privesc33 Dataproc Job Submitter"
   description = "Can submit jobs to Dataproc clusters"
   project     = var.project_id
 
@@ -41,15 +41,15 @@ resource "google_project_iam_custom_role" "privesc32_dataproc_jobs" {
 }
 
 # Grant the custom role at project level
-resource "google_project_iam_member" "privesc32_dataproc_jobs" {
+resource "google_project_iam_member" "privesc33_dataproc_jobs" {
   project = var.project_id
-  role    = google_project_iam_custom_role.privesc32_dataproc_jobs.id
-  member  = "serviceAccount:${google_service_account.privesc32_dataproc_jobs.email}"
+  role    = google_project_iam_custom_role.privesc33_dataproc_jobs.id
+  member  = "serviceAccount:${google_service_account.privesc33_dataproc_jobs.email}"
 }
 
 # Allow the attacker to impersonate this service account
-resource "google_service_account_iam_member" "privesc32_impersonate" {
-  service_account_id = google_service_account.privesc32_dataproc_jobs.name
+resource "google_service_account_iam_member" "privesc33_impersonate" {
+  service_account_id = google_service_account.privesc33_dataproc_jobs.name
   role               = "roles/iam.serviceAccountTokenCreator"
   member             = var.attacker_member
 }

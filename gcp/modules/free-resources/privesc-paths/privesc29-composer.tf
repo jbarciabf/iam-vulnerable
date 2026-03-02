@@ -1,17 +1,27 @@
 # Privesc Path 29: Cloud Composer (Airflow) Environment
 #
-# VULNERABILITY: A service account with composer.environments.create and actAs
-# can create Composer environments running with high-priv SAs.
+# VULNERABILITY: A service account with composer.environments.create, actAs,
+# and storage write permissions can create Composer environments running with
+# high-priv SAs and upload malicious DAGs.
 #
 # EXPLOITATION:
 #   1. Impersonate the attacking service account
 #   2. Create a Cloud Composer environment with high-priv SA
-#   3. Access the Airflow UI or DAGs bucket
-#   4. Deploy a DAG that runs with high-priv SA permissions
+#   3. Upload a malicious DAG to the environment's GCS bucket
+#   4. The DAG executes with the high-priv SA's credentials
+#   5. Extract token via metadata server from within the DAG
 #
 # DETECTION: FoxMapper detects this via the composer edge checker
 #
 # REAL-WORLD IMPACT: Critical - Workflow orchestration abuse
+#
+# NOTE: DAGs can ONLY be loaded from the environment's GCS bucket.
+#       There is no way to point Composer at a GitHub repo or external bucket.
+#       The attacker must have storage.objects.create on the DAGs bucket.
+#       Since the attacker creates the environment, they typically get bucket
+#       access via the same permissions that allow environment creation.
+#
+# COST: ~$300/month (Composer environments are expensive)
 
 resource "google_service_account" "privesc29_composer" {
   account_id   = "${var.resource_prefix}29-composer"
@@ -22,16 +32,23 @@ resource "google_service_account" "privesc29_composer" {
   depends_on = [time_sleep.batch7_delay]
 }
 
-# Custom role with Composer permissions
+# Custom role with Composer permissions + Storage write for DAG uploads
 resource "google_project_iam_custom_role" "privesc29_composer" {
   role_id     = "${var.resource_prefix}_29_composer"
   title       = "Privesc29 - Cloud Composer"
-  description = "Vulnerable: Can create/update Composer environments"
+  description = "Vulnerable: Can create Composer environments and upload DAGs"
   permissions = [
+    # Composer permissions
     "composer.environments.create",
     "composer.environments.get",
     "composer.environments.list",
     "composer.environments.update",
+    # Storage permissions (required to upload DAGs to environment bucket)
+    "storage.buckets.get",
+    "storage.buckets.list",
+    "storage.objects.create",
+    "storage.objects.get",
+    "storage.objects.list",
   ]
   project = var.project_id
 }

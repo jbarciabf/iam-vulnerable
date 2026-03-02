@@ -56,32 +56,32 @@ output "privesc_service_accounts" {
       # Composer (29) - Always enabled
       "privesc29-composer" = google_service_account.privesc29_composer.email
 
-      # Dataflow (30) - Always enabled
-      "privesc30-dataflow" = google_service_account.privesc30_dataflow.email
+      # Dataflow (31) - Always enabled
+      "privesc31-dataflow" = google_service_account.privesc31_dataflow.email
 
-      # Dataproc (31-32) - Always enabled
-      "privesc31-dataprocClusters"   = google_service_account.privesc31_dataproc.email
-      "privesc32-dataprocJobsCreate" = google_service_account.privesc32_dataproc_jobs.email
+      # Dataproc (32-33) - Always enabled
+      "privesc32-dataprocClusters"   = google_service_account.privesc32_dataproc.email
+      "privesc33-dataprocJobsCreate" = google_service_account.privesc33_dataproc_jobs.email
 
-      # GKE/Kubernetes (33-34) - Always enabled
-      "privesc33-gkeCluster"        = google_service_account.privesc33_gke.email
-      "privesc34-gkeGetCredentials" = google_service_account.privesc34_gke_creds.email
+      # GKE/Kubernetes (34-35) - Always enabled
+      "privesc34-gkeCluster"        = google_service_account.privesc34_gke.email
+      "privesc35-gkeGetCredentials" = google_service_account.privesc35_gke_creds.email
 
-      # Vertex AI / AI Platform (35-36) - Always enabled
-      "privesc35-notebooksInstances"   = google_service_account.privesc35_notebooks.email
-      "privesc36-aiplatformCustomJobs" = google_service_account.privesc36_aiplatform.email
+      # Vertex AI / AI Platform (36-37) - Always enabled
+      "privesc36-notebooksInstances"   = google_service_account.privesc36_notebooks.email
+      "privesc37-aiplatformCustomJobs" = google_service_account.privesc37_aiplatform.email
 
-      # Cloud Workflows (37) - Always enabled
-      "privesc37-workflows" = google_service_account.privesc37_workflows.email
+      # Cloud Workflows (38) - Always enabled
+      "privesc38-workflows" = google_service_account.privesc38_workflows.email
 
-      # Eventarc (38) - Always enabled
-      "privesc38-eventarcTriggersCreate" = google_service_account.privesc38_eventarc.email
+      # Eventarc (39) - Always enabled
+      "privesc39-eventarcTriggersCreate" = google_service_account.privesc39_eventarc.email
 
-      # Workload Identity (39) - Always enabled
-      "privesc39-workloadIdentity" = google_service_account.privesc39_workload_identity.email
+      # Workload Identity (40) - Always enabled
+      "privesc40-workloadIdentity" = google_service_account.privesc40_workload_identity.email
 
-      # Deny Bypass (41) - Always enabled
-      "privesc41-explicitDeny-bypass" = google_service_account.privesc41_deny_bypass.email
+      # Deny Bypass (42) - Always enabled
+      "privesc42-explicitDeny-bypass" = google_service_account.privesc42_deny_bypass.email
     },
     # Conditionally enabled paths (require target infrastructure)
     var.enable_privesc11a ? { "privesc11a-setMetadata-gcloud" = google_service_account.privesc11a_set_metadata[0].email } : {},
@@ -97,7 +97,8 @@ output "privesc_service_accounts" {
     var.enable_privesc22 ? { "privesc22-runJobsUpdate" = google_service_account.privesc22_run_jobs_update[0].email } : {},
     var.enable_privesc26 ? { "privesc26-cloudSchedulerUpdate" = google_service_account.privesc26_scheduler_update[0].email } : {},
     var.enable_privesc28 ? { "privesc28-deploymentManagerUpdate" = google_service_account.privesc28_dm_update[0].email } : {},
-    var.enable_privesc40 ? { "privesc40-orgPolicySet" = google_service_account.privesc40_org_policy[0].email } : {},
+    var.enable_privesc30 ? { "privesc30-composerUpdate" = google_service_account.privesc30_composer_update[0].email } : {},
+    var.enable_privesc41 ? { "privesc41-orgPolicySet" = google_service_account.privesc41_org_policy[0].email } : {},
   )
 }
 
@@ -122,15 +123,11 @@ output "privesc22_sa_email" {
   value       = var.enable_privesc22 ? google_service_account.privesc22_run_jobs_update[0].email : null
 }
 
-output "privesc26_target_job_name" {
-  description = "Name of the target scheduler job to hijack (if enabled)"
-  value       = var.enable_privesc26 ? google_cloud_scheduler_job.privesc26_target_job[0].name : null
-}
-
-output "privesc28_target_deployment_name" {
-  description = "Name of the target deployment for Path 28 (DM update privesc)"
-  value       = var.enable_privesc28 ? google_deployment_manager_deployment.privesc28_target[0].name : null
-}
+# NOTE: privesc26 target job, privesc28 target deployment, and privesc30 target
+# composer environment outputs are now in their respective non-free modules:
+#   - modules/non-free-resources/cloud-scheduler
+#   - modules/non-free-resources/deployment-manager
+#   - modules/non-free-resources/composer
 
 # =============================================================================
 # LATERAL MOVEMENT PATHS (Data Access, NOT Privilege Escalation)

@@ -1,4 +1,4 @@
-# Privesc Path 39: Workload Identity Federation Abuse
+# Privesc Path 40: Workload Identity Federation Abuse
 #
 # VULNERABILITY: A service account that can create or modify Workload Identity
 # Pool Providers can configure federation to accept tokens from external
@@ -15,9 +15,9 @@
 #
 # REAL-WORLD IMPACT: Critical - External authentication to GCP resources
 
-resource "google_service_account" "privesc39_workload_identity" {
-  account_id   = "${var.resource_prefix}39-workload-identity"
-  display_name = "Privesc39 - Workload Identity"
+resource "google_service_account" "privesc40_workload_identity" {
+  account_id   = "${var.resource_prefix}40-workload-identity"
+  display_name = "Privesc40 - Workload Identity"
   description  = "Can escalate via Workload Identity Pool abuse"
   project      = var.project_id
 
@@ -25,9 +25,9 @@ resource "google_service_account" "privesc39_workload_identity" {
 }
 
 # Create a custom role with Workload Identity permissions
-resource "google_project_iam_custom_role" "privesc39_workload_identity" {
-  role_id     = "${var.resource_prefix}_37_workload_identity"
-  title       = "Privesc39 Workload Identity Admin"
+resource "google_project_iam_custom_role" "privesc40_workload_identity" {
+  role_id     = "${var.resource_prefix}_40_workload_identity"
+  title       = "Privesc40 Workload Identity Admin"
   description = "Can manage Workload Identity Pool Providers"
   project     = var.project_id
 
@@ -42,15 +42,15 @@ resource "google_project_iam_custom_role" "privesc39_workload_identity" {
 }
 
 # Grant the custom role at project level
-resource "google_project_iam_member" "privesc39_workload_identity" {
+resource "google_project_iam_member" "privesc40_workload_identity" {
   project = var.project_id
-  role    = google_project_iam_custom_role.privesc39_workload_identity.id
-  member  = "serviceAccount:${google_service_account.privesc39_workload_identity.email}"
+  role    = google_project_iam_custom_role.privesc40_workload_identity.id
+  member  = "serviceAccount:${google_service_account.privesc40_workload_identity.email}"
 }
 
 # Allow the attacker to impersonate this service account
-resource "google_service_account_iam_member" "privesc39_impersonate" {
-  service_account_id = google_service_account.privesc39_workload_identity.name
+resource "google_service_account_iam_member" "privesc40_impersonate" {
+  service_account_id = google_service_account.privesc40_workload_identity.name
   role               = "roles/iam.serviceAccountTokenCreator"
   member             = var.attacker_member
 }

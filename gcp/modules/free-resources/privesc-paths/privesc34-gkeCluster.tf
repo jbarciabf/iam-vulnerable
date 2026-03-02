@@ -1,4 +1,4 @@
-# Privesc Path 33: GKE Cluster with Privileged Node SA
+# Privesc Path 34: GKE Cluster with Privileged Node SA
 #
 # VULNERABILITY: A user with container.clusters.create and actAs can create
 # GKE clusters whose nodes run with a high-privilege service account.
@@ -16,9 +16,9 @@
 # NOTE: Creating GKE clusters incurs cost (~$70/mo minimum)
 #       This path only creates the IAM configuration, not the cluster
 
-resource "google_service_account" "privesc33_gke" {
-  account_id   = "${var.resource_prefix}33-gke"
-  display_name = "Privesc33 - GKE Clusters"
+resource "google_service_account" "privesc34_gke" {
+  account_id   = "${var.resource_prefix}34-gke"
+  display_name = "Privesc34 - GKE Clusters"
   description  = "Can escalate via container.clusters.create"
   project      = var.project_id
 
@@ -26,9 +26,9 @@ resource "google_service_account" "privesc33_gke" {
 }
 
 # Create a custom role with GKE permissions
-resource "google_project_iam_custom_role" "privesc33_gke" {
-  role_id     = "${var.resource_prefix}_33_gke"
-  title       = "Privesc33 GKE Cluster Creator"
+resource "google_project_iam_custom_role" "privesc34_gke" {
+  role_id     = "${var.resource_prefix}_34_gke"
+  title       = "Privesc34 GKE Cluster Creator"
   description = "Can create GKE clusters"
   project     = var.project_id
 
@@ -42,22 +42,22 @@ resource "google_project_iam_custom_role" "privesc33_gke" {
 }
 
 # Grant the custom role at project level
-resource "google_project_iam_member" "privesc33_gke" {
+resource "google_project_iam_member" "privesc34_gke" {
   project = var.project_id
-  role    = google_project_iam_custom_role.privesc33_gke.id
-  member  = "serviceAccount:${google_service_account.privesc33_gke.email}"
+  role    = google_project_iam_custom_role.privesc34_gke.id
+  member  = "serviceAccount:${google_service_account.privesc34_gke.email}"
 }
 
 # Grant actAs on the high-privilege SA (for node identity)
-resource "google_service_account_iam_member" "privesc33_actas" {
+resource "google_service_account_iam_member" "privesc34_actas" {
   service_account_id = google_service_account.high_priv.name
   role               = "roles/iam.serviceAccountUser"
-  member             = "serviceAccount:${google_service_account.privesc33_gke.email}"
+  member             = "serviceAccount:${google_service_account.privesc34_gke.email}"
 }
 
 # Allow the attacker to impersonate this service account
-resource "google_service_account_iam_member" "privesc33_impersonate" {
-  service_account_id = google_service_account.privesc33_gke.name
+resource "google_service_account_iam_member" "privesc34_impersonate" {
+  service_account_id = google_service_account.privesc34_gke.name
   role               = "roles/iam.serviceAccountTokenCreator"
   member             = var.attacker_member
 }

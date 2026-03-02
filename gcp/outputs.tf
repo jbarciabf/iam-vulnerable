@@ -59,7 +59,8 @@ output "summary" {
       - privesc22 (run.jobs.update):      ${var.enable_privesc22 ? "Enabled" : "Disabled"}
       - privesc26 (scheduler.jobs.update): ${var.enable_privesc26 ? "Enabled" : "Disabled"}
       - privesc28 (dm.deployments.update): ${var.enable_privesc28 ? "Enabled" : "Disabled"}
-      - privesc40 (orgpolicy.policy.set): ${var.enable_privesc40 ? "Enabled" : "Disabled"}
+      - privesc30 (composer.update ~$400/mo!): ${var.enable_privesc30 ? "Enabled" : "Disabled"}
+      - privesc41 (orgpolicy.policy.set): ${var.enable_privesc41 ? "Enabled" : "Disabled"}
 
     Privilege Escalation Paths Created:
     ${join("\n    ", [for name, email in module.privesc-paths.privesc_service_accounts : "- ${name}: ${email}"])}

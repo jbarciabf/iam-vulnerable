@@ -115,9 +115,16 @@ variable "enable_privesc28" {
   default     = false
 }
 
-# Org Policy (40) - requires organization
-variable "enable_privesc40" {
-  description = "Enable privesc40: orgpolicy.policy.set (requires GCP organization)"
+# Composer Update (30) - creates target Composer environment (~$400/mo!)
+variable "enable_privesc30" {
+  description = "Enable privesc30: composer.environments.update (creates target Composer environment to hijack - ~$400/mo!)"
+  type        = bool
+  default     = false
+}
+
+# Org Policy (41) - requires organization
+variable "enable_privesc41" {
+  description = "Enable privesc41: orgpolicy.policy.set (requires GCP organization)"
   type        = bool
   default     = false
 }

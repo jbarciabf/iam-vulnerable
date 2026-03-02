@@ -97,7 +97,8 @@ module "privesc-paths" {
   enable_privesc22  = var.enable_privesc22
   enable_privesc26  = var.enable_privesc26
   enable_privesc28  = var.enable_privesc28
-  enable_privesc40  = var.enable_privesc40
+  enable_privesc30  = var.enable_privesc30
+  enable_privesc41  = var.enable_privesc41
 
   depends_on = [google_project_service.serviceusage]
 }
@@ -183,4 +184,42 @@ module "cloud-run" {
   enable_privesc20 = var.enable_privesc20
   # Only create target job for path 22
   enable_privesc22 = var.enable_privesc22
+}
+
+# Cloud Scheduler job for privesc26 (cloudscheduler.jobs.update)
+# Created when scheduler update privesc path is enabled
+# Cost: Minimal (pay per job execution)
+module "cloud-scheduler" {
+  source = "./modules/non-free-resources/cloud-scheduler"
+  count  = var.enable_privesc26 ? 1 : 0
+
+  project_id = var.gcp_project_id
+  region     = var.gcp_region
+
+  depends_on = [module.privesc-paths]
+}
+
+# Deployment Manager deployment for privesc28 (deploymentmanager.deployments.update)
+# Created when DM update privesc path is enabled
+# Cost: ~$0.02/month (GCS bucket for placeholder deployment)
+module "deployment-manager" {
+  source = "./modules/non-free-resources/deployment-manager"
+  count  = var.enable_privesc28 ? 1 : 0
+
+  project_id = var.gcp_project_id
+
+  depends_on = [module.privesc-paths]
+}
+
+# Cloud Composer environment for privesc30 (composer.environments.update)
+# Created when composer update privesc path is enabled
+# ⚠️  EXTREME COST WARNING: ~$400/month! DELETE IMMEDIATELY after testing!
+module "composer" {
+  source = "./modules/non-free-resources/composer"
+  count  = var.enable_privesc30 ? 1 : 0
+
+  project_id         = var.gcp_project_id
+  high_priv_sa_email = module.privesc-paths.high_priv_service_account_email
+
+  depends_on = [module.privesc-paths]
 }

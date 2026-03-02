@@ -16,6 +16,8 @@
 #
 # NOTE: This path is DISABLED by default because it requires an existing
 #       Cloud Scheduler job to hijack. Enable with: enable_privesc26 = true
+#
+# TARGET INFRASTRUCTURE: Created by modules/non-free-resources/cloud-scheduler
 
 resource "google_service_account" "privesc26_scheduler_update" {
   count = var.enable_privesc26 ? 1 : 0
@@ -69,34 +71,4 @@ resource "google_service_account_iam_member" "privesc26_impersonate" {
   service_account_id = google_service_account.privesc26_scheduler_update[0].name
   role               = "roles/iam.serviceAccountTokenCreator"
   member             = var.attacker_member
-}
-
-# =============================================================================
-# TARGET INFRASTRUCTURE: Scheduler job to hijack
-# =============================================================================
-
-# Target scheduler job that can be hijacked
-# This job runs with a low-priv SA initially - attacker will update it to use high-priv SA
-resource "google_cloud_scheduler_job" "privesc26_target_job" {
-  count = var.enable_privesc26 ? 1 : 0
-
-  name        = "${var.resource_prefix}26-target-job"
-  description = "Target job for privesc26 - hijack via cloudscheduler.jobs.update"
-  region      = var.region
-  project     = var.project_id
-  schedule    = "0 0 1 1 *" # Once a year (Jan 1 at midnight) - not intended to run automatically
-
-  http_target {
-    uri         = "https://example.com/placeholder"
-    http_method = "POST"
-    body        = base64encode("{\"message\": \"This job will be hijacked\"}")
-    headers = {
-      "Content-Type" = "application/json"
-    }
-    # Initially NO oidc_token - attacker will add one with high-priv SA
-  }
-
-  retry_config {
-    retry_count = 0
-  }
 }
