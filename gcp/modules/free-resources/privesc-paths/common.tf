@@ -9,17 +9,18 @@
 # We create batches with delays to avoid hitting this limit.
 # Each privesc path depends on a batch delay to serialize creation.
 #
-# Batch Schedule (43 privesc scenarios + 2 common SAs = 45 SAs total):
-#   batch1: high_priv, medium_priv (2 SAs)
+# Batch Schedule (48 privesc scenarios + 3 common SAs = 51 SAs total):
+#   batch1: high_priv, medium_priv, iam_viewer (3 SAs)
 #   batch2: privesc1-5 (5 SAs) - IAM Service Account part 1
 #   batch3: privesc6-9 (4 SAs) - IAM Service Account part 2
-#   batch4: privesc10-14, privesc15-17 (8 SAs) - Compute + Cloud Functions
+#   batch4: privesc10-14, lateral7, privesc16-17 (8 SAs) - Compute + Cloud Functions
 #   batch5: privesc18-22 (5 SAs) - Cloud Run + Cloud Build
 #   batch6: privesc23-27 (5 SAs) - Storage + Secret Manager + Pub/Sub
-#   batch7: privesc28-32 (5 SAs) - Scheduler + Deploy Mgr + Composer + Dataflow + Dataproc
-#   batch8: privesc33-37 (5 SAs) - Dataproc Jobs + GKE + Vertex AI
-#   batch9: privesc38-42 (5 SAs) - Workflows + Eventarc + BigQuery + Workload Identity + Org Policy
-#   batch10: privesc43 (1 SA) - Deny Bypass
+#   batch7: privesc28-32 (5 SAs) - Scheduler + Deploy Mgr + Composer + Dataflow Create + Dataflow Update
+#   batch8: privesc33-37 (5 SAs) - Dataproc Clusters + Dataproc Jobs + GKE + Vertex AI
+#   batch9: privesc38-41 (up to 4 SAs) - Notebooks Update + AI Platform + Workflows Create + Workflows Update
+#   batch10: privesc42-46 (up to 5 SAs) - Eventarc Create + Eventarc Update + Workload Identity Create + Workload Identity Update + Org Policy
+#   batch11: privesc47 (2 SAs) - Deny Bypass
 
 resource "time_sleep" "batch1_delay" {
   create_duration = "0s" # First batch starts immediately
@@ -70,6 +71,11 @@ resource "time_sleep" "batch10_delay" {
   create_duration = "65s"
 }
 
+resource "time_sleep" "batch11_delay" {
+  depends_on      = [time_sleep.batch10_delay]
+  create_duration = "65s"
+}
+
 # =============================================================================
 # HIGH-PRIVILEGE TARGET SERVICE ACCOUNT
 # =============================================================================
@@ -98,8 +104,8 @@ resource "google_project_iam_member" "high_priv_owner" {
 # Used as intermediate hop in the delegation chain for privesc path 7
 
 resource "google_service_account" "medium_priv" {
-  account_id   = "${var.resource_prefix}7-medium-priv-sa"
-  display_name = "Privesc7 - Medium Privilege SA"
+  account_id   = "${var.resource_prefix}07-medium-priv-sa"
+  display_name = "Privesc07 - Medium Privilege SA"
   description  = "Intermediate SA for path 7 implicit delegation chain"
   project      = var.project_id
 
@@ -111,6 +117,37 @@ resource "google_project_iam_member" "medium_priv_editor" {
   project = var.project_id
   role    = "roles/editor"
   member  = "serviceAccount:${google_service_account.medium_priv.email}"
+}
+
+# =============================================================================
+# IAM VIEWER SERVICE ACCOUNT (Enumeration / Reconnaissance)
+# =============================================================================
+# This SA has Viewer role on the project, allowing read-only enumeration of
+# all resources. Use it to simulate an attacker's initial reconnaissance phase
+# before exploiting a specific privesc path. Works with gcloud, CloudFox,
+# and other enumeration tools.
+
+resource "google_service_account" "iam_viewer" {
+  account_id   = "iam-vulnerable-viewer"
+  display_name = "IAM Viewer - Enumeration SA"
+  description  = "Read-only Viewer role for enumerating project resources and identifying privesc paths"
+  project      = var.project_id
+
+  depends_on = [time_sleep.batch1_delay]
+}
+
+# Grant Viewer role (read-only access to all project resources)
+resource "google_project_iam_member" "iam_viewer" {
+  project = var.project_id
+  role    = "roles/viewer"
+  member  = "serviceAccount:${google_service_account.iam_viewer.email}"
+}
+
+# Allow the attacker to impersonate the viewer SA
+resource "google_service_account_iam_member" "iam_viewer_impersonate" {
+  service_account_id = google_service_account.iam_viewer.name
+  role               = "roles/iam.serviceAccountTokenCreator"
+  member             = var.attacker_member
 }
 
 # =============================================================================
@@ -265,11 +302,47 @@ resource "google_project_service" "iamcredentials" {
   disable_on_destroy = false
 }
 
+resource "google_project_service" "sts" {
+  project = var.project_id
+  service = "sts.googleapis.com"
+
+  disable_on_destroy = false
+}
+
 resource "google_project_service" "orgpolicy" {
   project = var.project_id
   service = "orgpolicy.googleapis.com"
 
   disable_on_destroy = false
+}
+
+# =============================================================================
+# SSH USER - Project-level SSH access for the attacker
+# =============================================================================
+# Grants the attacker identity project-level permissions to SSH into any
+# compute instance. This separates "SSH access" from "privilege escalation"
+# so privesc paths only need the vulnerable permissions, not SSH plumbing.
+# Used as the completion step for compute-based paths (10, 15, 16b, 16c).
+
+resource "google_project_iam_custom_role" "ssh_user" {
+  role_id     = "${var.resource_prefix}_ssh_user"
+  title       = "Privesc SSH User"
+  description = "Project-level SSH access for completing compute-based privesc paths"
+  project     = var.project_id
+
+  permissions = [
+    "compute.instances.get",
+    "compute.instances.list",
+    "compute.instances.setMetadata",
+    "compute.projects.get",
+    "compute.zones.list",
+  ]
+}
+
+resource "google_project_iam_member" "ssh_user" {
+  project = var.project_id
+  role    = google_project_iam_custom_role.ssh_user.id
+  member  = var.attacker_member
 }
 
 # =============================================================================

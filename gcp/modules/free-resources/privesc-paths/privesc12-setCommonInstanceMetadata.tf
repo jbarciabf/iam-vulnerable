@@ -34,12 +34,8 @@ resource "google_project_iam_custom_role" "privesc12_set_common_metadata" {
   title       = "Privesc12 - Set Project Metadata"
   description = "Vulnerable: Can modify project-level metadata including SSH keys for ALL instances"
   permissions = [
-    "compute.projects.get",
     "compute.projects.setCommonInstanceMetadata",
-    # Supporting permissions to find VMs with high-priv SAs
-    "compute.instances.list",
-    "compute.instances.get",
-    "compute.zones.list",
+    "compute.projects.get", # Required to retrieve project metadata fingerprint
   ]
   project = var.project_id
 }
@@ -62,12 +58,25 @@ resource "google_service_account_iam_member" "privesc12_impersonate" {
   member             = var.attacker_member
 }
 
-# Grant actAs at project level (required for modifying project-level metadata)
-# This is more powerful than instance-level actAs since it affects ALL SAs
-resource "google_project_iam_member" "privesc12_actas_project" {
+# Custom role with only actAs (required because project metadata changes
+# affect instances with attached SAs - GCP requires actAs for this)
+resource "google_project_iam_custom_role" "privesc12_actas" {
+  count = var.enable_privesc12 ? 1 : 0
+
+  role_id     = "${var.resource_prefix}_12_actAs"
+  title       = "Privesc12 - actAs Only"
+  description = "Required for setCommonInstanceMetadata on projects with SA-attached VMs"
+  project     = var.project_id
+
+  permissions = [
+    "iam.serviceAccounts.actAs",
+  ]
+}
+
+resource "google_project_iam_member" "privesc12_actas" {
   count = var.enable_privesc12 ? 1 : 0
 
   project = var.project_id
-  role    = "roles/iam.serviceAccountUser"
+  role    = google_project_iam_custom_role.privesc12_actas[0].id
   member  = "serviceAccount:${google_service_account.privesc12_set_common_metadata[0].email}"
 }

@@ -1,4 +1,4 @@
-# Privesc Path 14: OS Login
+# Privesc Path 13: OS Login
 #
 # VULNERABILITY: A service account with compute.instances.osLogin or
 # compute.instances.osAdminLogin can SSH to instances using OS Login.
@@ -13,13 +13,13 @@
 #
 # REAL-WORLD IMPACT: High - OS Login bypass for SSH access
 #
-# DISABLED BY DEFAULT: Requires enable_privesc14 = true (creates target VM ~$2-5/mo)
+# DISABLED BY DEFAULT: Requires enable_privesc13 = true (creates target VM ~$6-7/mo)
 
-resource "google_service_account" "privesc14_os_login" {
-  count = var.enable_privesc14 ? 1 : 0
+resource "google_service_account" "privesc13_os_login" {
+  count = var.enable_privesc13 ? 1 : 0
 
-  account_id   = "${var.resource_prefix}14-os-login"
-  display_name = "Privesc14 - OS Login"
+  account_id   = "${var.resource_prefix}13-os-login"
+  display_name = "Privesc13 - OS Login"
   description  = "Can escalate via OS Login SSH access"
   project      = var.project_id
 
@@ -27,28 +27,28 @@ resource "google_service_account" "privesc14_os_login" {
 }
 
 # Grant OS Login permissions
-resource "google_project_iam_member" "privesc14_os_login" {
-  count = var.enable_privesc14 ? 1 : 0
+resource "google_project_iam_member" "privesc13_os_login" {
+  count = var.enable_privesc13 ? 1 : 0
 
   project = var.project_id
   role    = "roles/compute.osAdminLogin"
-  member  = "serviceAccount:${google_service_account.privesc14_os_login[0].email}"
+  member  = "serviceAccount:${google_service_account.privesc13_os_login[0].email}"
 }
 
 # Also need to be able to list/get instances
-resource "google_project_iam_member" "privesc14_compute_viewer" {
-  count = var.enable_privesc14 ? 1 : 0
+resource "google_project_iam_member" "privesc13_compute_viewer" {
+  count = var.enable_privesc13 ? 1 : 0
 
   project = var.project_id
   role    = "roles/compute.viewer"
-  member  = "serviceAccount:${google_service_account.privesc14_os_login[0].email}"
+  member  = "serviceAccount:${google_service_account.privesc13_os_login[0].email}"
 }
 
 # Allow the attacker to impersonate this service account
-resource "google_service_account_iam_member" "privesc14_impersonate" {
-  count = var.enable_privesc14 ? 1 : 0
+resource "google_service_account_iam_member" "privesc13_impersonate" {
+  count = var.enable_privesc13 ? 1 : 0
 
-  service_account_id = google_service_account.privesc14_os_login[0].name
+  service_account_id = google_service_account.privesc13_os_login[0].name
   role               = "roles/iam.serviceAccountTokenCreator"
   member             = var.attacker_member
 }
@@ -56,10 +56,10 @@ resource "google_service_account_iam_member" "privesc14_impersonate" {
 # Grant actAs on high-priv SA (required for OS Login to the VM)
 # OS Login requires serviceAccountUser on the VM's attached SA because
 # logging in means "acting as" that service account
-resource "google_service_account_iam_member" "privesc14_actas_high_priv" {
-  count = var.enable_privesc14 ? 1 : 0
+resource "google_service_account_iam_member" "privesc13_actas_high_priv" {
+  count = var.enable_privesc13 ? 1 : 0
 
   service_account_id = google_service_account.high_priv.name
   role               = "roles/iam.serviceAccountUser"
-  member             = "serviceAccount:${google_service_account.privesc14_os_login[0].email}"
+  member             = "serviceAccount:${google_service_account.privesc13_os_login[0].email}"
 }

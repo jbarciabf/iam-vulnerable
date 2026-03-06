@@ -14,49 +14,30 @@
 # REAL-WORLD IMPACT: High - Direct JWT signing for token forgery
 
 resource "google_service_account" "privesc6_sign_jwt" {
-  account_id   = "${var.resource_prefix}6-sign-jwt"
-  display_name = "Privesc6 - signJwt"
+  account_id   = "${var.resource_prefix}06-sign-jwt"
+  display_name = "Privesc06 - signJwt"
   description  = "Can escalate via JWT signing"
   project      = var.project_id
 
   depends_on = [time_sleep.batch3_delay]
 }
 
-# Custom role for list/get at project level (discovery only)
-resource "google_project_iam_custom_role" "privesc6_sa_viewer" {
-  role_id     = "${var.resource_prefix}_06_saViewer"
-  title       = "Privesc06 - SA Viewer"
-  description = "Can list and view service accounts"
-  permissions = [
-    "iam.serviceAccounts.list",
-    "iam.serviceAccounts.get",
-  ]
-  project = var.project_id
-}
-
-# Grant viewer at project level
-resource "google_project_iam_member" "privesc6_viewer" {
-  project = var.project_id
-  role    = google_project_iam_custom_role.privesc6_sa_viewer.id
-  member  = "serviceAccount:${google_service_account.privesc6_sign_jwt.email}"
-}
-
-# Custom role with signJwt permission - granted at SA level only
+# Custom role with signJwt permission
 resource "google_project_iam_custom_role" "sign_jwt" {
   role_id     = "${var.resource_prefix}_06_signJwt"
   title       = "Privesc06 - Sign JWT"
-  description = "Vulnerable: Can sign JWTs as this specific service account"
+  description = "Vulnerable: Can sign JWTs as any service account in the project"
   permissions = [
     "iam.serviceAccounts.signJwt",
   ]
   project = var.project_id
 }
 
-# Grant signJwt ONLY on the high-privilege SA (not project-wide)
-resource "google_service_account_iam_member" "privesc6_sign_jwt_on_high_priv" {
-  service_account_id = google_service_account.high_priv.name
-  role               = google_project_iam_custom_role.sign_jwt.id
-  member             = "serviceAccount:${google_service_account.privesc6_sign_jwt.email}"
+# Grant signJwt at project level (visible in IAM and CloudFox)
+resource "google_project_iam_member" "privesc6_sign_jwt" {
+  project = var.project_id
+  role    = google_project_iam_custom_role.sign_jwt.id
+  member  = "serviceAccount:${google_service_account.privesc6_sign_jwt.email}"
 }
 
 # Allow the attacker to impersonate this service account

@@ -1,4 +1,4 @@
-# Privesc Path 32: Dataproc Clusters with Privileged SA
+# Privesc Path 33: Dataproc Clusters with Privileged SA
 #
 # VULNERABILITY: A user with dataproc.clusters.create and actAs can create
 # Dataproc clusters that execute with a high-privilege service account.
@@ -16,19 +16,19 @@
 # NOTE: Creating Dataproc clusters incurs cost (~$0.10/hr minimum)
 #       This path only creates the IAM configuration, not the cluster
 
-resource "google_service_account" "privesc32_dataproc" {
-  account_id   = "${var.resource_prefix}32-dataproc"
-  display_name = "Privesc32 - Dataproc Clusters"
+resource "google_service_account" "privesc33_dataproc" {
+  account_id   = "${var.resource_prefix}33-dataproc"
+  display_name = "Privesc33 - Dataproc Clusters"
   description  = "Can escalate via dataproc.clusters.create"
   project      = var.project_id
 
-  depends_on = [time_sleep.batch7_delay]
+  depends_on = [time_sleep.batch8_delay]
 }
 
 # Create a custom role with Dataproc permissions
-resource "google_project_iam_custom_role" "privesc32_dataproc" {
-  role_id     = "${var.resource_prefix}_32_dataproc"
-  title       = "Privesc32 Dataproc Cluster Creator"
+resource "google_project_iam_custom_role" "privesc33_dataproc" {
+  role_id     = "${var.resource_prefix}_33_dataproc"
+  title       = "Privesc33 Dataproc Cluster Creator"
   description = "Can create Dataproc clusters"
   project     = var.project_id
 
@@ -41,22 +41,22 @@ resource "google_project_iam_custom_role" "privesc32_dataproc" {
 }
 
 # Grant the custom role at project level
-resource "google_project_iam_member" "privesc32_dataproc" {
+resource "google_project_iam_member" "privesc33_dataproc" {
   project = var.project_id
-  role    = google_project_iam_custom_role.privesc32_dataproc.id
-  member  = "serviceAccount:${google_service_account.privesc32_dataproc.email}"
+  role    = google_project_iam_custom_role.privesc33_dataproc.id
+  member  = "serviceAccount:${google_service_account.privesc33_dataproc.email}"
 }
 
 # Grant actAs on the high-privilege SA
-resource "google_service_account_iam_member" "privesc32_actas" {
+resource "google_service_account_iam_member" "privesc33_actas" {
   service_account_id = google_service_account.high_priv.name
   role               = "roles/iam.serviceAccountUser"
-  member             = "serviceAccount:${google_service_account.privesc32_dataproc.email}"
+  member             = "serviceAccount:${google_service_account.privesc33_dataproc.email}"
 }
 
 # Allow the attacker to impersonate this service account
-resource "google_service_account_iam_member" "privesc32_impersonate" {
-  service_account_id = google_service_account.privesc32_dataproc.name
+resource "google_service_account_iam_member" "privesc33_impersonate" {
+  service_account_id = google_service_account.privesc33_dataproc.name
   role               = "roles/iam.serviceAccountTokenCreator"
   member             = var.attacker_member
 }

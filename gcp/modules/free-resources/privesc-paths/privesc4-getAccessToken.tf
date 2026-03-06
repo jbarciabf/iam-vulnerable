@@ -14,20 +14,30 @@
 # REAL-WORLD IMPACT: Critical - Direct token generation
 
 resource "google_service_account" "privesc4_get_access_token" {
-  account_id   = "${var.resource_prefix}4-get-access-token"
-  display_name = "Privesc4 - getAccessToken"
+  account_id   = "${var.resource_prefix}04-get-access-token"
+  display_name = "Privesc04 - getAccessToken"
   description  = "Can escalate via direct token generation"
   project      = var.project_id
 
   depends_on = [time_sleep.batch2_delay]
 }
 
-# Grant token creator on the high-privilege service account
-# This is the same as actAs but more direct
-resource "google_service_account_iam_member" "privesc4_token_creator" {
-  service_account_id = google_service_account.high_priv.name
-  role               = "roles/iam.serviceAccountTokenCreator"
-  member             = "serviceAccount:${google_service_account.privesc4_get_access_token.email}"
+# Custom role with only getAccessToken permission
+resource "google_project_iam_custom_role" "privesc4_get_access_token" {
+  role_id     = "${var.resource_prefix}_04_getAccessToken"
+  title       = "Privesc04 - Get Access Token"
+  description = "Vulnerable: Can generate access tokens for any service account in the project"
+  permissions = [
+    "iam.serviceAccounts.getAccessToken",
+  ]
+  project = var.project_id
+}
+
+# Grant getAccessToken at project level (visible in IAM and CloudFox)
+resource "google_project_iam_member" "privesc4_get_access_token" {
+  project = var.project_id
+  role    = google_project_iam_custom_role.privesc4_get_access_token.id
+  member  = "serviceAccount:${google_service_account.privesc4_get_access_token.email}"
 }
 
 # Allow the attacker to impersonate this service account

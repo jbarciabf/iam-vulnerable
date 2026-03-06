@@ -1,4 +1,4 @@
-# Privesc Path 39: Eventarc Triggers Create
+# Privesc Path 42: Eventarc Triggers Create
 #
 # VULNERABILITY: A service account with eventarc.triggers.create and actAs
 # can create Eventarc triggers that invoke Cloud Run or other services
@@ -15,19 +15,19 @@
 #
 # REAL-WORLD IMPACT: Critical - Event-driven code execution as privileged SA
 
-resource "google_service_account" "privesc39_eventarc" {
-  account_id   = "${var.resource_prefix}39-eventarc"
-  display_name = "Privesc39 - eventarc.triggers.create"
+resource "google_service_account" "privesc42_eventarc" {
+  account_id   = "${var.resource_prefix}42-eventarc"
+  display_name = "Privesc42 - eventarc.triggers.create"
   description  = "Can escalate via Eventarc trigger creation"
   project      = var.project_id
 
-  depends_on = [time_sleep.batch9_delay]
+  depends_on = [time_sleep.batch10_delay]
 }
 
 # Create a custom role with Eventarc trigger permissions
-resource "google_project_iam_custom_role" "privesc39_eventarc" {
-  role_id     = "${var.resource_prefix}_39_eventarc"
-  title       = "Privesc39 Eventarc Trigger Creator"
+resource "google_project_iam_custom_role" "privesc42_eventarc" {
+  role_id     = "${var.resource_prefix}_42_eventarc"
+  title       = "Privesc42 Eventarc Trigger Creator"
   description = "Can create Eventarc triggers"
   project     = var.project_id
 
@@ -39,22 +39,22 @@ resource "google_project_iam_custom_role" "privesc39_eventarc" {
 }
 
 # Grant the custom role at project level
-resource "google_project_iam_member" "privesc39_eventarc" {
+resource "google_project_iam_member" "privesc42_eventarc" {
   project = var.project_id
-  role    = google_project_iam_custom_role.privesc39_eventarc.id
-  member  = "serviceAccount:${google_service_account.privesc39_eventarc.email}"
+  role    = google_project_iam_custom_role.privesc42_eventarc.id
+  member  = "serviceAccount:${google_service_account.privesc42_eventarc.email}"
 }
 
 # Grant actAs on the high-privilege SA
-resource "google_service_account_iam_member" "privesc39_actas" {
+resource "google_service_account_iam_member" "privesc42_actas" {
   service_account_id = google_service_account.high_priv.name
   role               = "roles/iam.serviceAccountUser"
-  member             = "serviceAccount:${google_service_account.privesc39_eventarc.email}"
+  member             = "serviceAccount:${google_service_account.privesc42_eventarc.email}"
 }
 
 # Allow the attacker to impersonate this service account
-resource "google_service_account_iam_member" "privesc39_impersonate" {
-  service_account_id = google_service_account.privesc39_eventarc.name
+resource "google_service_account_iam_member" "privesc42_impersonate" {
+  service_account_id = google_service_account.privesc42_eventarc.name
   role               = "roles/iam.serviceAccountTokenCreator"
   member             = var.attacker_member
 }

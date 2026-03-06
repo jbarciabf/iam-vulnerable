@@ -13,24 +13,33 @@
 # REAL-WORLD IMPACT: Critical - Multi-hop impersonation chain
 
 resource "google_service_account" "privesc7_implicit_delegation" {
-  account_id   = "${var.resource_prefix}7-implicit-deleg"
-  display_name = "Privesc7 - Implicit Delegation"
+  account_id   = "${var.resource_prefix}07-implicit-deleg"
+  display_name = "Privesc07 - Implicit Delegation"
   description  = "Can escalate via implicit delegation chain"
   project      = var.project_id
 
   depends_on = [time_sleep.batch3_delay]
 }
 
-# Grant implicit delegation on the medium-priv SA
-# This allows using medium-priv's permissions to impersonate further
-resource "google_service_account_iam_member" "privesc7_implicit_delegation" {
-  service_account_id = google_service_account.medium_priv.name
-  role               = "roles/iam.serviceAccountTokenCreator"
-  member             = "serviceAccount:${google_service_account.privesc7_implicit_delegation.email}"
+# Custom role with only implicitDelegation permission
+resource "google_project_iam_custom_role" "privesc7_implicit_delegation" {
+  role_id     = "${var.resource_prefix}_07_implicitDelegation"
+  title       = "Privesc07 - Implicit Delegation"
+  description = "Vulnerable: Can use implicit delegation on any service account in the project"
+  permissions = [
+    "iam.serviceAccounts.implicitDelegation",
+  ]
+  project = var.project_id
 }
 
-# Medium-priv SA already has impersonation on high-priv (defined elsewhere)
-# We need to ensure that chain exists - grant token creator from medium to high
+# Grant implicitDelegation at project level (visible in IAM and CloudFox)
+resource "google_project_iam_member" "privesc7_implicit_delegation" {
+  project = var.project_id
+  role    = google_project_iam_custom_role.privesc7_implicit_delegation.id
+  member  = "serviceAccount:${google_service_account.privesc7_implicit_delegation.email}"
+}
+
+# Medium-priv SA has impersonation on high-priv - creates the delegation chain
 resource "google_service_account_iam_member" "privesc7_chain" {
   service_account_id = google_service_account.high_priv.name
   role               = "roles/iam.serviceAccountTokenCreator"

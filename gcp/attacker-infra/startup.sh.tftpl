@@ -1,0 +1,53 @@
+#!/bin/bash
+
+# Get external IP from GCP metadata endpoint
+EXTERNAL_IP=$(curl -s -H "Metadata-Flavor: Google" \
+  http://metadata.google.internal/computeMetadata/v1/instance/network-interfaces/0/access-configs/0/external-ip)
+
+# Cert directory accessible to the SSH user
+CERT_DIR="/home/${ssh_username}/certs"
+mkdir -p "$CERT_DIR"
+chown -R "${ssh_username}:${ssh_username}" "$CERT_DIR"
+
+# Install certbot
+apt-get update -y
+apt-get install -y certbot
+
+# Determine DNS name for the certificate
+%{ if dns_name != "" ~}
+DNS_NAME="${dns_name}"
+%{ else ~}
+# Use sslip.io - free wildcard DNS that resolves IP.sslip.io to that IP
+# Unlike bc.googleusercontent.com, sslip.io has forward A records so Let's Encrypt works
+DNS_NAME=$(echo "$EXTERNAL_IP" | tr '.' '-').sslip.io
+%{ endif ~}
+
+echo "Requesting Let's Encrypt certificate for $DNS_NAME (email: ${certbot_email})..." | tee /var/log/certbot-startup.log
+if certbot certonly --standalone \
+  -d "$DNS_NAME" \
+  --email "${certbot_email}" \
+  --agree-tos \
+  --non-interactive \
+  --key-type rsa \
+  --config-dir "$CERT_DIR/config" \
+  --logs-dir "$CERT_DIR/logs" \
+  --work-dir "$CERT_DIR/work" 2>&1 | tee -a /var/log/certbot-startup.log; then
+
+  # Symlink to predictable paths
+  ln -sf "$CERT_DIR/config/live/$DNS_NAME/fullchain.pem" "$CERT_DIR/fullchain.pem"
+  ln -sf "$CERT_DIR/config/live/$DNS_NAME/privkey.pem" "$CERT_DIR/privkey.pem"
+  echo "SUCCESS: Let's Encrypt certificate for $DNS_NAME" | tee -a /var/log/certbot-startup.log
+else
+  echo "FAILED: certbot error. Falling back to self-signed certificate..." | tee -a /var/log/certbot-startup.log
+  openssl req -x509 -newkey rsa:4096 -nodes -days 365 \
+    -keyout "$CERT_DIR/privkey.pem" \
+    -out "$CERT_DIR/fullchain.pem" \
+    -subj "/CN=$DNS_NAME" \
+    -addext "subjectAltName=DNS:$DNS_NAME,IP:$EXTERNAL_IP"
+  echo "Self-signed certificate generated as fallback" | tee -a /var/log/certbot-startup.log
+fi
+
+# Ensure the SSH user owns all cert files
+chown -R "${ssh_username}:${ssh_username}" "$CERT_DIR"
+echo "Certificates at: $CERT_DIR/fullchain.pem and $CERT_DIR/privkey.pem" | tee -a /var/log/certbot-startup.log
+echo "DNS name: $DNS_NAME" | tee -a /var/log/certbot-startup.log

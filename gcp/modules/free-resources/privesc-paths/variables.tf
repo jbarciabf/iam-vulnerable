@@ -33,14 +33,8 @@ variable "resource_prefix" {
 # or a GCP Organization to fully exploit.
 
 # Compute Engine paths (11-16)
-variable "enable_privesc11a" {
-  description = "Enable privesc11a: setMetadata-compute via gcloud compute ssh (auto key injection)"
-  type        = bool
-  default     = false
-}
-
-variable "enable_privesc11b" {
-  description = "Enable privesc11b: setMetadata-compute via manual key injection"
+variable "enable_privesc11" {
+  description = "Enable privesc11: setMetadata-compute via manual key injection"
   type        = bool
   default     = false
 }
@@ -52,19 +46,19 @@ variable "enable_privesc12" {
 }
 
 variable "enable_privesc13" {
-  description = "Enable privesc13: Existing SSH access to VM with high-priv SA"
+  description = "Enable privesc13: osLogin"
   type        = bool
   default     = false
 }
 
 variable "enable_privesc14" {
-  description = "Enable privesc14: osLogin"
+  description = "Enable privesc14: setServiceAccount"
   type        = bool
   default     = false
 }
 
-variable "enable_privesc15" {
-  description = "Enable privesc15: setServiceAccount"
+variable "enable_lateral7" {
+  description = "Enable lateral7: Existing SSH access to VM with high-priv SA"
   type        = bool
   default     = false
 }
@@ -122,9 +116,44 @@ variable "enable_privesc30" {
   default     = false
 }
 
-# Org Policy (41) - requires organization
+# Dataflow Update (32) - requires existing streaming Dataflow job
+variable "enable_privesc32" {
+  description = "Enable privesc32: dataflow.jobs.updateContents (requires existing streaming Dataflow job to hijack)"
+  type        = bool
+  default     = false
+}
+
+# Notebooks Update (38) - needs verification
+variable "enable_privesc38" {
+  description = "Enable privesc38: notebooks.instances.setIamPolicy (hijack existing notebook)"
+  type        = bool
+  default     = false
+}
+
+# Workflows Update (41) - hijack existing workflow
 variable "enable_privesc41" {
-  description = "Enable privesc41: orgpolicy.policy.set (requires GCP organization)"
+  description = "Enable privesc41: workflows.workflows.update (hijack existing workflow)"
+  type        = bool
+  default     = false
+}
+
+# Eventarc Triggers Update (43) - hijack existing trigger
+variable "enable_privesc43" {
+  description = "Enable privesc43: eventarc.triggers.update (hijack existing trigger)"
+  type        = bool
+  default     = false
+}
+
+# Workload Identity Update (45) - hijack existing provider
+variable "enable_privesc45" {
+  description = "Enable privesc45: iam.workloadIdentityPoolProviders.update (hijack existing provider)"
+  type        = bool
+  default     = false
+}
+
+# Org Policy (46) - requires organization
+variable "enable_privesc46" {
+  description = "Enable privesc46: orgpolicy.policy.set (requires GCP organization)"
   type        = bool
   default     = false
 }

@@ -15,13 +15,13 @@
 #
 # PERMISSIONS BREAKDOWN:
 #   Primary (Vulnerable):
-#     - iam.serviceAccounts.actAs (via roles/iam.serviceAccountUser on target SA)
+#     - iam.serviceAccounts.actAs (custom role at project level)
 #     - compute.instances.create
 #   Supporting (Required for exploitation):
 #     - compute.disks.create (required to create boot disk)
-#     - compute.subnetworks.use (required to attach to network)
-#     - compute.subnetworks.useExternalIp (required for external IP / SSH access)
-#     - compute.instances.setMetadata (required for SSH key injection)
+#     - compute.instances.setServiceAccount (required to attach high-priv SA)
+#   SSH Access (handled by project-level SSH user, not this SA):
+#     - The attacker uses their own SSH permissions to connect after VM creation
 
 resource "google_service_account" "privesc10_actas_compute" {
   account_id   = "${var.resource_prefix}10-actas-compute"
@@ -32,11 +32,23 @@ resource "google_service_account" "privesc10_actas_compute" {
   depends_on = [time_sleep.batch4_delay]
 }
 
-# Grant actAs on the high-privilege service account
-resource "google_service_account_iam_member" "privesc10_actas" {
-  service_account_id = google_service_account.high_priv.name
-  role               = "roles/iam.serviceAccountUser"
-  member             = "serviceAccount:${google_service_account.privesc10_actas_compute.email}"
+# Custom role with only actAs (instead of roles/iam.serviceAccountUser which has 5 permissions)
+resource "google_project_iam_custom_role" "privesc10_actas" {
+  role_id     = "${var.resource_prefix}_10_actAs"
+  title       = "Privesc10 - actAs Only"
+  description = "Vulnerable: Can act as any service account in the project"
+  project     = var.project_id
+
+  permissions = [
+    "iam.serviceAccounts.actAs",
+  ]
+}
+
+# Grant actAs at project level (visible in IAM console and CloudFox)
+resource "google_project_iam_member" "privesc10_actas" {
+  project = var.project_id
+  role    = google_project_iam_custom_role.privesc10_actas.id
+  member  = "serviceAccount:${google_service_account.privesc10_actas_compute.email}"
 }
 
 # Custom role with minimal permissions for compute instance creation
@@ -51,15 +63,9 @@ resource "google_project_iam_custom_role" "privesc10_compute" {
     "compute.instances.create",
     # Supporting permissions (required for exploitation)
     "compute.disks.create",
+    "compute.instances.setServiceAccount",
     "compute.subnetworks.use",
     "compute.subnetworks.useExternalIp",
-    "compute.instances.setMetadata",
-    "compute.instances.setServiceAccount",
-    # Utility permissions
-    "compute.instances.get",
-    "compute.instances.list",
-    "compute.instances.delete",
-    "compute.zones.list",
   ]
 }
 

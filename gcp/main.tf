@@ -84,12 +84,11 @@ module "privesc-paths" {
   attacker_member = local.attacker_member
 
   # Individual privesc path toggles (disabled by default)
-  enable_privesc11a = var.enable_privesc11a
-  enable_privesc11b = var.enable_privesc11b
+  enable_privesc11 = var.enable_privesc11
   enable_privesc12  = var.enable_privesc12
   enable_privesc13  = var.enable_privesc13
   enable_privesc14  = var.enable_privesc14
-  enable_privesc15  = var.enable_privesc15
+  enable_lateral7   = var.enable_lateral7
   enable_privesc18  = var.enable_privesc18
   enable_privesc19  = var.enable_privesc19
   enable_privesc20  = var.enable_privesc20
@@ -98,7 +97,12 @@ module "privesc-paths" {
   enable_privesc26  = var.enable_privesc26
   enable_privesc28  = var.enable_privesc28
   enable_privesc30  = var.enable_privesc30
+  enable_privesc32  = var.enable_privesc32
+  enable_privesc38  = var.enable_privesc38
   enable_privesc41  = var.enable_privesc41
+  enable_privesc43  = var.enable_privesc43
+  enable_privesc45  = var.enable_privesc45
+  enable_privesc46  = var.enable_privesc46
 
   depends_on = [google_project_service.serviceusage]
 }
@@ -120,12 +124,12 @@ module "tool-testing" {
 # TARGET INFRASTRUCTURE - Created when corresponding privesc paths are enabled
 # =============================================================================
 
-# Compute Engine instance for privesc11a/11b/12/13/14/15 (setMetadata, osLogin, setServiceAccount)
+# Compute Engine instances for privesc11/12/13/14/lateral7 (setMetadata, osLogin, setServiceAccount, existingSSH)
 # Created when any compute-based privesc path is enabled
-# Cost: ~$2-5/month (preemptible e2-micro)
+# Cost: ~$6-7/month per e2-micro instance (standard)
 module "compute" {
   source = "./modules/non-free-resources/compute"
-  count  = (var.enable_privesc11a || var.enable_privesc11b || var.enable_privesc12 || var.enable_privesc13 || var.enable_privesc14 || var.enable_privesc15) ? 1 : 0
+  count  = (var.enable_privesc11 || var.enable_privesc12 || var.enable_privesc13 || var.enable_privesc14 || var.enable_lateral7) ? 1 : 0
 
   project_id      = var.gcp_project_id
   region          = var.gcp_region
@@ -135,12 +139,11 @@ module "compute" {
   high_priv_sa_email = module.privesc-paths.high_priv_service_account_email
 
   # Per-path instance flags
-  enable_privesc11a = var.enable_privesc11a
-  enable_privesc11b = var.enable_privesc11b
-  enable_privesc12  = var.enable_privesc12
-  enable_privesc13  = var.enable_privesc13
-  enable_privesc14  = var.enable_privesc14
-  enable_privesc15  = var.enable_privesc15
+  enable_privesc11 = var.enable_privesc11
+  enable_privesc12 = var.enable_privesc12
+  enable_privesc13 = var.enable_privesc13
+  enable_privesc14 = var.enable_privesc14
+  enable_lateral7  = var.enable_lateral7
 }
 
 # Cloud Function for privesc18 (updateFunction)
@@ -219,6 +222,20 @@ module "composer" {
   count  = var.enable_privesc30 ? 1 : 0
 
   project_id         = var.gcp_project_id
+  high_priv_sa_email = module.privesc-paths.high_priv_service_account_email
+
+  depends_on = [module.privesc-paths]
+}
+
+# Dataflow streaming job for privesc32 (dataflow.jobs.updateContents)
+# Created when dataflow update privesc path is enabled
+# Cost: ~$0.05-0.10/hr while running
+module "dataflow" {
+  source = "./modules/non-free-resources/dataflow"
+  count  = var.enable_privesc32 ? 1 : 0
+
+  project_id         = var.gcp_project_id
+  region             = var.gcp_region
   high_priv_sa_email = module.privesc-paths.high_priv_service_account_email
 
   depends_on = [module.privesc-paths]

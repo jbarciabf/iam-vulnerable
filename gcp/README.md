@@ -96,7 +96,7 @@ If you don't have an existing project, Terraform can create one for you:
 
 ### Optional: Setting Up a GCP Organization with Cloud Identity Free
 
-> **Note:** A GCP Organization is **not required** for most privilege escalation paths in this project. Only org-level paths like `orgpolicy.policy.set` (privesc41) require an organization to fully exploit. Skip this section if you just want to test project-level privesc.
+> **Note:** A GCP Organization is **not required** for most privilege escalation paths in this project. Only org-level paths like `orgpolicy.policy.set` (privesc46) require an organization to fully exploit. Skip this section if you just want to test project-level privesc.
 
 GCP Organizations cannot be created directly - they're automatically provisioned when you verify domain ownership through Google Workspace or Cloud Identity. Here's how to set one up for free using Cloud Identity Free:
 
@@ -194,7 +194,14 @@ To delete the organization later:
 
 ### Free Resources (Default)
 
-**42 Privilege Escalation Scenarios** grouped by GCP service:
+**Shared Service Accounts:**
+
+| SA | Email | Role | Purpose |
+|----|-------|------|---------|
+| IAM Viewer | `iam-vulnerable-viewer@PROJECT_ID.iam.gserviceaccount.com` | `roles/viewer` | Enumeration and reconnaissance across all scenarios |
+| High-Privilege Target | `privesc-high-priv-sa@PROJECT_ID.iam.gserviceaccount.com` | `roles/owner` | Crown jewel - target for privilege escalation |
+
+**47 Privilege Escalation Scenarios** grouped by GCP service:
 
 | # | Scenario | Starting Endpoint | Permission(s) | Exploit Cost | Status |
 |---|----------|---------------|---------------|--------------|--------|
@@ -210,12 +217,10 @@ To delete the organization later:
 | 9 | updateRole | `privesc9-update-role@PROJECT_ID.iam.gserviceaccount.com` | `iam.roles.update` | Free | Enabled |
 | **Compute Engine** | | | | | |
 | 10 | actAs-compute | `privesc10-actas-compute@PROJECT_ID.iam.gserviceaccount.com` | `actAs` + `compute.instances.create`* | ~$0.01/hr | Enabled |
-| 11a | setMetadata (gcloud ssh) | `privesc11a-set-metadata@PROJECT_ID.iam.gserviceaccount.com` | `compute.instances.setMetadata` | ~$2-5/mo | Disabled |
-| 11b | setMetadata (manual key) | `privesc11b-set-metadata@PROJECT_ID.iam.gserviceaccount.com` | `compute.instances.setMetadata` | ~$2-5/mo | Disabled |
+| 11 | setMetadata (manual key injection) | `privesc11-set-metadata@PROJECT_ID.iam.gserviceaccount.com` | `compute.instances.setMetadata` | ~$2-5/mo | Disabled |
 | 12 | setCommonInstanceMetadata | `privesc12-set-proj-meta@PROJECT_ID.iam.gserviceaccount.com` | `compute.projects.setCommonInstanceMetadata`* | ~$2-5/mo | Disabled |
-| 13 | existingSSH | `privesc13-existing-ssh@PROJECT_ID.iam.gserviceaccount.com` | Existing SSH key access* | ~$2-5/mo | Disabled |
-| 14 | osLogin | `privesc14-os-login@PROJECT_ID.iam.gserviceaccount.com` | `compute.instances.osAdminLogin`* | ~$2-5/mo | Disabled |
-| 15 | setServiceAccount | `privesc15-set-sa@PROJECT_ID.iam.gserviceaccount.com` | `actAs` + `compute.instances.setServiceAccount` | ~$2-5/mo | Disabled |
+| 13 | osLogin | `privesc13-os-login@PROJECT_ID.iam.gserviceaccount.com` | `compute.instances.osAdminLogin`* | ~$2-5/mo | Disabled |
+| 14 | setServiceAccount | `privesc14-set-sa@PROJECT_ID.iam.gserviceaccount.com` | `actAs` + `compute.instances.setServiceAccount` | ~$2-5/mo | Disabled |
 | 16a | instanceTemplates (persistence) | `privesc16a-inst-templ@PROJECT_ID.iam.gserviceaccount.com` | `actAs` + `compute.instanceTemplates.create`* | Free | Enabled |
 | 16b | instanceTemplates + instances | `privesc16b-inst-templ@PROJECT_ID.iam.gserviceaccount.com` | `actAs` + `instanceTemplates.create` + `instances.create`* | ~$0.01/hr | Enabled |
 | 16c | instanceTemplates + MIG | `privesc16c-inst-templ@PROJECT_ID.iam.gserviceaccount.com` | `actAs` + `instanceTemplates.create` + `instanceGroupManagers.create`* | ~$0.01/hr | Enabled |
@@ -242,25 +247,30 @@ To delete the organization later:
 | 30 | composer (update) | `privesc30-composer-update@PROJECT_ID.iam.gserviceaccount.com` | `composer.environments.update` + `storage.objects.create` | ~$400/mo | Disabled |
 | **Dataflow** | | | | | |
 | 31 | dataflow | `privesc31-dataflow@PROJECT_ID.iam.gserviceaccount.com` | `actAs` + `dataflow.jobs.create`* | ~$0.05/hr | Enabled |
+| 32 | dataflow.jobs.updateContents | (disabled - enable_privesc32) | dataflow.jobs.updateContents + dataflow.jobs.cancel | ~$0.05/hr | Disabled |
 | **Dataproc** | | | | | |
-| 32 | dataproc.clusters.create | `privesc32-dataproc@PROJECT_ID.iam.gserviceaccount.com` | `actAs` + `dataproc.clusters.create` | ~$0.10/hr | Enabled |
-| 33 | dataproc.jobs.create | `privesc33-dataproc-jobs@PROJECT_ID.iam.gserviceaccount.com` | `dataproc.jobs.create` | Free | Enabled |
+| 33 | dataproc.clusters.create | `privesc33-dataproc@PROJECT_ID.iam.gserviceaccount.com` | `actAs` + `dataproc.clusters.create` | ~$0.10/hr | Enabled |
+| 34 | dataproc.jobs.create | `privesc34-dataproc-jobs@PROJECT_ID.iam.gserviceaccount.com` | `dataproc.jobs.create` | Free | Enabled |
 | **GKE/Kubernetes** | | | | | |
-| 34 | container.clusters.create | `privesc34-gke@PROJECT_ID.iam.gserviceaccount.com` | `actAs` + `container.clusters.create` | ~$70/mo | Enabled |
-| 35 | container.clusters.getCredentials | `privesc35-gke-creds@PROJECT_ID.iam.gserviceaccount.com` | `container.clusters.getCredentials` | Free | Enabled |
+| 35 | container.clusters.create | `privesc35-gke@PROJECT_ID.iam.gserviceaccount.com` | `actAs` + `container.clusters.create` | ~$70/mo | Enabled |
+| 36 | container.clusters.getCredentials | `privesc36-gke-creds@PROJECT_ID.iam.gserviceaccount.com` | `container.clusters.getCredentials` | Free | Enabled |
 | **Vertex AI / AI Platform** | | | | | |
-| 36 | notebooks.instances.create | `privesc36-notebooks@PROJECT_ID.iam.gserviceaccount.com` | `actAs` + `notebooks.instances.create` | ~$25/mo | Enabled |
-| 37 | aiplatform.customJobs.create | `privesc37-aiplatform@PROJECT_ID.iam.gserviceaccount.com` | `actAs` + `aiplatform.customJobs.create` | Varies | Enabled |
+| 37 | notebooks.instances.create | `privesc37-notebooks@PROJECT_ID.iam.gserviceaccount.com` | `actAs` + `notebooks.instances.create` | ~$25/mo | Enabled |
+| 38 | notebooks.instances.setIamPolicy | (disabled - enable_privesc38) | `notebooks.instances.setIamPolicy` | Free | Disabled |
+| 39 | aiplatform.customJobs.create | `privesc39-aiplatform@PROJECT_ID.iam.gserviceaccount.com` | `actAs` + `aiplatform.customJobs.create` | Varies | Enabled |
 | **Cloud Workflows** | | | | | |
-| 38 | workflows.workflows.create | `privesc38-workflows@PROJECT_ID.iam.gserviceaccount.com` | `actAs` + `workflows.workflows.create` | Free tier | Enabled |
+| 40 | workflows.workflows.create | `privesc40-workflows@PROJECT_ID.iam.gserviceaccount.com` | `actAs` + `workflows.workflows.create` | Free tier | Enabled |
+| 41 | workflows.workflows.update | (disabled - enable_privesc41) | `actAs` + `workflows.workflows.update` | Free | Disabled |
 | **Eventarc** | | | | | |
-| 39 | eventarc.triggers.create | `privesc39-eventarc@PROJECT_ID.iam.gserviceaccount.com` | `actAs` + `eventarc.triggers.create` | Free | Enabled |
+| 42 | eventarc.triggers.create | `privesc42-eventarc@PROJECT_ID.iam.gserviceaccount.com` | `actAs` + `eventarc.triggers.create` | Free | Enabled |
+| 43 | eventarc.triggers.update | (disabled - enable_privesc43) | `actAs` + `eventarc.triggers.update` | Free | Disabled |
 | **Workload Identity** | | | | | |
-| 40 | workloadIdentityPoolProviders | `privesc40-workload-identity@PROJECT_ID.iam.gserviceaccount.com` | `iam.workloadIdentityPoolProviders.create` | Free | Enabled |
+| 44 | workloadIdentityPoolProviders.create | `privesc44-workload-identity@PROJECT_ID.iam.gserviceaccount.com` | `iam.workloadIdentityPoolProviders.create` | Free | Enabled |
+| 45 | workloadIdentityPoolProviders.update | (disabled - enable_privesc45) | `iam.workloadIdentityPoolProviders.update` | Free | Disabled |
 | **Org Policy** | | | | | |
-| 41 | orgpolicy.policy.set | `privesc41-org-policy@PROJECT_ID.iam.gserviceaccount.com` | `orgpolicy.policy.set` | Free | Disabled |
+| 46 | orgpolicy.policy.set | `privesc46-org-policy@PROJECT_ID.iam.gserviceaccount.com` | `orgpolicy.policy.set` | Free | Disabled |
 | **Deny Bypass** | | | | | |
-| 42 | explicitDeny-bypass | `privesc42-deny-bypass@PROJECT_ID.iam.gserviceaccount.com` | SA chaining | Free | Enabled |
+| 47 | explicitDeny-bypass | `privesc47-deny-bypass@PROJECT_ID.iam.gserviceaccount.com` | SA chaining | Free | Enabled |
 
 #### Lateral Movement Paths (Honorable Mentions)
 
@@ -268,6 +278,7 @@ These paths demonstrate **data access and lateral movement**, NOT privilege esca
 
 | # | Name | Service Account | Vulnerable Permission | Category |
 |---|------|-----------------|----------------------|----------|
+| L7 | existingSSH | `lateral7-ssh@PROJECT_ID.iam.gserviceaccount.com` | Existing SSH key access | Credential Theft |
 | L1 | setIamPolicy-bucket | `lateral1-bucket-iam@PROJECT_ID.iam.gserviceaccount.com` | `storage.buckets.setIamPolicy` | Data Access |
 | L2 | storage.objects.create | `lateral2-storage-write@PROJECT_ID.iam.gserviceaccount.com` | `storage.objects.create` | Persistence |
 | L3 | secretManager.access | `lateral3-secret-access@PROJECT_ID.iam.gserviceaccount.com` | `secretmanager.versions.access` | Data Exfil |
@@ -277,10 +288,10 @@ These paths demonstrate **data access and lateral movement**, NOT privilege esca
 
 > **Permission Notes:**
 > - `*` = Requires supporting permissions beyond the vulnerable permission. See [EXPLOITATION_GUIDE.md](EXPLOITATION_GUIDE.md) for details.
->   - Path 10: Exploitation requires `compute.disks.create`, `compute.instances.setServiceAccount`. Completion requires `compute.subnetworks.use`, `compute.subnetworks.useExternalIp`, `compute.instances.setMetadata` (or use paths 11a-14)
+>   - Path 10: Exploitation requires `compute.disks.create`, `compute.instances.setServiceAccount`, `compute.subnetworks.use`, `compute.subnetworks.useExternalIp`. SSH access handled by project-level SSH user role.
 >   - Path 12: Also requires `compute.projects.get`, `compute.instances.list`, `compute.instances.get`, `compute.zones.list`
->   - Path 13: Also requires `compute.instances.list`, `compute.instances.get`, `compute.zones.list`, `compute.projects.get`
->   - Path 14: Also requires `roles/compute.viewer` (`compute.instances.get`, `compute.instances.list`, etc.)
+>   - Path 13: Also requires `roles/compute.viewer` (`compute.instances.get`, `compute.instances.list`, etc.)
+>   - Path 14: Also requires `compute.instances.get`, `compute.instances.stop`, `compute.instances.start`
 >   - Path 16a: Also requires `compute.networks.get`, `compute.subnetworks.get`
 >   - Path 16b: Exploitation requires `compute.networks.get`, `compute.subnetworks.get`, `compute.disks.create`, `compute.instances.setServiceAccount`. Completion requires `compute.subnetworks.use`, `compute.subnetworks.useExternalIp`, `compute.instances.setMetadata`
 >   - Path 16c: Exploitation requires `compute.networks.get`, `compute.subnetworks.get`, `compute.instances.create`, `compute.instances.setServiceAccount`, `compute.disks.create`. Completion requires `compute.subnetworks.use`, `compute.subnetworks.useExternalIp`, `compute.instances.setMetadata`
@@ -301,12 +312,11 @@ These paths demonstrate **data access and lateral movement**, NOT privilege esca
 > **Disabled Paths - Enable individually:**
 > | Path | Variable | Creates | Cost |
 > |------|----------|---------|------|
-> | 11a | `enable_privesc11a = true` | VM + IAM | ~$2-5/mo |
-> | 11b | `enable_privesc11b = true` | VM + IAM | ~$2-5/mo |
+> | 11 | `enable_privesc11 = true` | VM + IAM | ~$2-5/mo |
 > | 12 | `enable_privesc12 = true` | VM + IAM | ~$2-5/mo |
 > | 13 | `enable_privesc13 = true` | VM + IAM | ~$2-5/mo |
 > | 14 | `enable_privesc14 = true` | VM + IAM | ~$2-5/mo |
-> | 15 | `enable_privesc15 = true` | VM + IAM | ~$2-5/mo |
+> | L7 | `enable_lateral7 = true` | VM + IAM | ~$2-5/mo |
 > | 18 | `enable_privesc18 = true` | Function + IAM | Free (idle) |
 > | 19 | `enable_privesc19 = true` | Cloud Run + Artifact Registry + IAM | <$0.10/mo |
 > | 20 | `enable_privesc20 = true` | Cloud Run + Artifact Registry + IAM | <$0.10/mo |
@@ -315,7 +325,12 @@ These paths demonstrate **data access and lateral movement**, NOT privilege esca
 > | 26 | `enable_privesc26 = true` | Scheduler Job + IAM | Minimal |
 > | 28 | `enable_privesc28 = true` | DM Deployment + IAM | ~$0.02/mo |
 > | 30 | `enable_privesc30 = true` | Composer Env + IAM | ~$400/mo |
-> | 41 | `enable_privesc41 = true` | IAM only | Free (requires `gcp_organization_id`) |
+> | 32 | `enable_privesc32 = true` | Dataflow Job + IAM | ~$0.05/hr |
+> | 38 | `enable_privesc38 = true` | IAM only | Free |
+> | 41 | `enable_privesc41 = true` | IAM only | Free |
+> | 43 | `enable_privesc43 = true` | IAM only | Free |
+> | 45 | `enable_privesc45 = true` | IAM only | Free |
+> | 46 | `enable_privesc46 = true` | IAM only | Free (requires `gcp_organization_id`) |
 >
 > **Note:** "Exploit Cost" is what it costs to actually exploit the path. "Enabled" paths create only IAM resources (free) but exploitation may create billable resources (e.g., privesc10 creates a VM when exploited).
 
@@ -330,13 +345,12 @@ Some privesc paths are disabled by default because they require target infrastru
 ```hcl
 gcp_project_id = "your-test-project-id"
 
-# Compute-based paths (creates VM, ~$2-5/mo)
-enable_privesc11a = true  # setMetadata (gcloud ssh)
-enable_privesc11b = true  # setMetadata (manual key injection)
+# Compute-based paths (creates VM, ~$2-5/mo each)
+enable_privesc11 = true   # setMetadata (manual key injection)
 enable_privesc12 = true   # setCommonInstanceMetadata (project-level)
-enable_privesc13 = true   # existingSSH
-enable_privesc14 = true   # osLogin
-enable_privesc15 = true   # setServiceAccount
+enable_privesc13 = true   # osLogin
+enable_privesc14 = true   # setServiceAccount
+enable_lateral7  = true   # existingSSH (lateral movement)
 
 # Cloud Functions paths (creates function, free when idle)
 enable_privesc18 = true  # updateFunction
@@ -356,18 +370,130 @@ enable_privesc28 = true  # deploymentmanager.deployments.update
 # Composer update path (creates target environment, ~$400/mo!)
 enable_privesc30 = true  # composer.environments.update
 
+# Dataflow update path (creates target streaming job, ~$0.05/hr)
+enable_privesc32 = true  # dataflow.jobs.updateContents
+
+# Update paths (hijack existing infrastructure, IAM only)
+enable_privesc38 = true  # notebooks.instances.setIamPolicy
+enable_privesc41 = true  # workflows.workflows.update
+enable_privesc43 = true  # eventarc.triggers.update
+enable_privesc45 = true  # iam.workloadIdentityPoolProviders.update
+
 # Organization paths (requires gcp_organization_id)
 # gcp_organization_id = "123456789012"
-# enable_privesc41 = true  # orgpolicy.policy.set
+# enable_privesc46 = true  # orgpolicy.policy.set
 ```
 
 **Or via command line:**
 ```bash
-terraform apply -parallelism=2 -var="enable_privesc11a=true" -var="enable_privesc11b=true" -var="gcp_project_id=iam-vulnerable"
+terraform apply -parallelism=2 -var="enable_privesc11=true" -var="gcp_project_id=iam-vulnerable"
 
-# With organization (for privesc41)
-terraform apply -parallelism=2 -var="gcp_project_id=iam-vulnerable" -var="gcp_organization_id=123456789012" -var="enable_privesc41=true"
+# With organization (for privesc46)
+terraform apply -parallelism=2 -var="gcp_project_id=iam-vulnerable" -var="gcp_organization_id=123456789012" -var="enable_privesc46=true"
 ```
+
+## Attacker Infrastructure (Optional)
+
+A separate Terraform root at `gcp/attacker-infra/` provides an attacker box and staging bucket, deployed independently from the privesc paths (separate state).
+
+**What it creates:**
+
+| Resource | Lifecycle | Cost |
+|----------|-----------|------|
+| **VPC + Firewall** | Always (free) | Free |
+| **SSH Key** | Always (free, persists across rebuilds) | Free |
+| **Storage Bucket** | Always (free unless objects stored) | Free (empty) |
+| **Compute Instance** (`e2-micro`, spot) | Gated by `enable_attacker_instance` | ~$2-5/mo |
+| **TLS Certificate** (optional) | On boot if `enable_certbot = true` | Free |
+
+### Cost Analysis
+
+| Resource | Always Created | Cost | Notes |
+|----------|---------------|------|-------|
+| **VPC Network** | Yes | Free | Custom VPC, no charges for the network itself |
+| **Subnet** | Yes | Free | No charges for subnet allocation |
+| **Firewall Rules** (x2) | Yes | Free | No charges for firewall rules |
+| **SSH Key** (TLS + local file) | Yes | Free | Generated locally, no GCP charges |
+| **Storage Bucket** | Yes | Free (empty) | $0.020/GB/mo for Standard in US multi-region; free while empty |
+| **Compute Instance** (`e2-micro`, spot) | Only if `enable_attacker_instance = true` | ~$0.002/hr (~$1.50/mo) | Spot pricing; standard would be ~$0.008/hr (~$6/mo). 10GB `pd-standard` boot disk adds ~$0.40/mo |
+| **TLS Certificate** (Let's Encrypt) | Only if `enable_certbot = true` | Free | Let's Encrypt + sslip.io, no cost |
+| **Ephemeral External IP** | With instance | Free while attached | Charged ~$0.004/hr only if reserved but unattached |
+| **API Enablement** (Compute, Storage) | Yes | Free | Enabling APIs has no cost |
+
+**Total cost when instance is running:** ~$2/mo (spot) or ~$6.50/mo (standard)
+**Total cost when instance is destroyed:** $0 (bucket, VPC, SSH key, firewall rules are all free)
+
+> **Tip:** Use `terraform apply -var="enable_attacker_instance=false"` to destroy only the instance when not in use. All free resources persist, and spinning back up takes ~60 seconds.
+
+### Deploy
+
+```bash
+cd gcp/attacker-infra
+cp terraform.tfvars.example terraform.tfvars
+# Edit terraform.tfvars with your project ID
+
+terraform init
+terraform apply
+```
+
+### Spin Down / Spin Up the Instance
+
+Only the compute instance costs money. Destroy it while keeping the bucket, VPC, and SSH key:
+
+```bash
+# Destroy instance only (bucket, VPC, SSH key persist)
+terraform apply -var="enable_attacker_instance=false"
+
+# Spin it back up
+terraform apply -var="enable_attacker_instance=true"
+```
+
+### TLS Certificates (Optional)
+
+Set `enable_certbot = true` to request a trusted Let's Encrypt certificate on boot. By default it uses [sslip.io](https://sslip.io) (free wildcard DNS that resolves `IP.sslip.io` to that IP) - no DNS setup needed.
+
+```hcl
+enable_certbot = true
+# dns_name = "attacker.example.com"  # optional: use your own domain instead of sslip.io
+```
+
+Certs are always at `~/certs/fullchain.pem` and `~/certs/privkey.pem`, owned by the SSH user. Falls back to self-signed if Let's Encrypt fails. If the instance is destroyed and recreated, new certs are generated on boot.
+
+Check cert status on the instance:
+```bash
+ls -la ~/certs/
+sudo cat /var/log/certbot-startup.log
+```
+
+### Connect
+
+```bash
+# Terraform outputs a ready-to-use SSH command
+terraform output ssh_command
+
+# Or manually
+ssh -i attacker-ssh-key.pem USERNAME@INSTANCE_IP
+```
+
+### Use the Staging Bucket
+
+```bash
+# Upload payloads
+gsutil cp payload.sh gs://$(terraform output -raw attacker_bucket_name)/
+
+# Download from the attacker instance
+gsutil cp gs://BUCKET_NAME/payload.sh .
+```
+
+### Cleanup
+
+```bash
+# Full cleanup (destroys everything including bucket and VPC)
+cd gcp/attacker-infra
+terraform destroy
+```
+
+This does not affect the main `gcp/` Terraform state.
 
 ## Cost Summary
 
@@ -379,8 +505,13 @@ terraform apply -parallelism=2 -var="gcp_project_id=iam-vulnerable" -var="gcp_or
 | + Cloud Functions (idle) | +$0.00 | Free tier |
 | + Cloud Run paths 19-22 | +$0.00 | <$0.10 |
 | **All modules enabled** | ~$0.01 | ~$5-10 |
+| | | |
+| **Attacker Infra** (separate state) | | |
+| + Free resources only (VPC, bucket, SSH key) | $0.00 | $0 |
+| + Instance running (spot e2-micro) | +$0.002 | +~$2 |
+| + Instance running (standard e2-micro) | +$0.008 | +~$6.50 |
 
-**Note:** The default deployment creates only IAM resources (service accounts, custom roles, IAM bindings) which are **completely free**. Non-free modules must be explicitly enabled.
+**Note:** The default deployment creates only IAM resources (service accounts, custom roles, IAM bindings) which are **completely free**. Non-free modules must be explicitly enabled. Attacker infrastructure is a separate Terraform root (`gcp/attacker-infra/`) with its own state - see [Attacker Infrastructure](#attacker-infrastructure-optional) for details.
 
 ## Testing with FoxMapper
 
@@ -414,6 +545,15 @@ terraform apply -parallelism=1
 
 The Terraform configuration includes batched delays, but on retries after errors the delays have already completed and pending resources try to create at once. Using `-parallelism=2` prevents this.
 
+### Compute Engine Quota Errors on New Projects
+
+New GCP projects have low default Compute Engine quotas. You may see `ZONE_RESOURCE_POOL_EXHAUSTED`, `Rate Limit Exceeded`, or `Quota on concurrent operations exceeded` errors when exploiting compute-based paths (10, 11-14, 16b-16c).
+
+**Fixes:**
+1. **Try a different zone/region:** Add `--zone=us-east1-b` or `--machine-type=e2-micro`
+2. **Wait and retry:** Transient rate limits often clear within 30-60 seconds
+3. **Request quota increases:** Go to [IAM & Admin > Quotas & System Limits](https://console.cloud.google.com/iam-admin/quotas), filter for `Compute Engine API`, and request increases for your region
+
 ### Cloud Functions Build Errors
 
 If you see errors about bucket access being denied for the compute service account:
@@ -431,7 +571,7 @@ sleep 60 && terraform apply -parallelism=2
 
 ### Organization Policy Errors
 
-The `orgpolicy.policy.set` permission cannot be used in custom roles - this is a GCP limitation. The privesc41 path uses the predefined `roles/orgpolicy.policyAdmin` role instead.
+The `orgpolicy.policy.set` permission cannot be used in custom roles - this is a GCP limitation. The privesc46 path uses the predefined `roles/orgpolicy.policyAdmin` role instead.
 
 **Note:** Actually modifying organization policies requires:
 1. A GCP Organization (tied to a verified domain via Google Workspace or Cloud Identity)
@@ -468,14 +608,58 @@ cd cleanup-scripts
 
 ## Exploitation Quick Start
 
-This section provides a quick introduction to exploiting the privilege escalation paths. For complete step-by-step instructions for all 42 scenarios, see [EXPLOITATION_GUIDE.md](EXPLOITATION_GUIDE.md).
+This section provides a quick introduction to exploiting the privilege escalation paths. For complete step-by-step instructions for all 47 scenarios, see [EXPLOITATION_GUIDE.md](EXPLOITATION_GUIDE.md).
 
 ### How It Works
 
 Each privesc path follows this pattern:
-1. **Attacker** (you) can impersonate a **vulnerable service account**
-2. The **vulnerable SA** has permissions that allow escalation to a **high-privilege SA**
-3. The **high-privilege SA** (`privesc-high-priv-sa@PROJECT.iam.gserviceaccount.com`) has Owner role
+1. **Enumerate** using the **IAM Viewer SA** to discover vulnerable resources and service accounts
+2. **Impersonate** the **vulnerable service account** for a specific path
+3. **Escalate** using the vulnerable SA's permissions to reach the **high-privilege SA**
+4. The **high-privilege SA** (`privesc-high-priv-sa@PROJECT.iam.gserviceaccount.com`) has Owner role
+
+**Key Service Accounts:**
+| SA | Role | Purpose |
+|----|------|---------|
+| `iam-vulnerable-viewer@PROJECT_ID.iam` | Viewer | Enumeration / reconnaissance |
+| `privesc-high-priv-sa@PROJECT_ID.iam` | Owner | Target (crown jewel) |
+
+### Step 0: Enumerate with the Viewer SA
+
+Before exploiting any path, use the IAM Viewer SA to discover what's in the project:
+
+```bash
+export PROJECT_ID="your-project-id"
+export VIEWER_SA="iam-vulnerable-viewer@$PROJECT_ID.iam.gserviceaccount.com"
+
+# Impersonate the viewer SA
+gcloud config set auth/impersonate_service_account $VIEWER_SA
+
+# List all service accounts and their IAM bindings
+gcloud iam service-accounts list --project=$PROJECT_ID
+gcloud projects get-iam-policy $PROJECT_ID --flatten="bindings[].members" \
+  --format="table(bindings.role, bindings.members)"
+
+# List custom roles (reveals vulnerable permissions)
+gcloud iam roles list --project=$PROJECT_ID --format="table(name, title)"
+gcloud iam roles describe ROLE_ID --project=$PROJECT_ID
+
+# Enumerate compute, functions, run, etc.
+gcloud compute instances list --project=$PROJECT_ID
+gcloud functions list --project=$PROJECT_ID
+gcloud run services list --project=$PROJECT_ID
+
+# Clear impersonation when done enumerating
+gcloud config unset auth/impersonate_service_account
+```
+
+**With CloudFox:**
+
+```bash
+# Run CloudFox with the viewer SA for automated enumeration
+cloudfox gcp --project $PROJECT_ID \
+  --service-account $VIEWER_SA
+```
 
 ### Basic Impersonation
 
@@ -541,7 +725,7 @@ gcloud auth print-access-token \
 ### Next Steps
 
 See [EXPLOITATION_GUIDE.md](EXPLOITATION_GUIDE.md) for:
-- Detailed exploitation steps for all 42 scenarios
+- Detailed exploitation steps for all 47 scenarios
 - Service-specific attack patterns (Compute, Functions, Run, Build, etc.)
 - Quick reference table of all service account emails
 
@@ -553,24 +737,30 @@ gcp/
 ├── variables.tf               # Input variables
 ├── outputs.tf                 # Output values
 ├── terraform.tfvars.example   # Example configuration
+├── attacker-infra/            # Separate root: attacker box + staging bucket
+│   ├── main.tf
+│   ├── variables.tf
+│   ├── outputs.tf
+│   └── terraform.tfvars.example
 ├── cleanup-scripts/           # Manual cleanup tools
 │   ├── CLEANUP_README.md
 │   ├── cleanup_iam_vulnerable.sh
 │   └── cleanup_iam_vulnerable.py
 └── modules/
     ├── free-resources/
-    │   ├── privesc-paths/     # 42 privilege escalation paths
+    │   ├── privesc-paths/     # 47 privilege escalation paths
     │   │   ├── common.tf      # Shared resources
     │   │   ├── privesc1-*.tf  # Individual paths
     │   │   └── ...
     │   └── tool-testing/      # FN/FP test cases
     └── non-free-resources/
-        ├── compute/           # GCE instances (paths 11-15)
+        ├── compute/           # GCE instances (paths 11-14, lateral7)
         ├── cloud-functions/   # Cloud Functions (path 18)
         ├── cloud-run/         # Cloud Run service/jobs (paths 19-22)
         ├── cloud-scheduler/   # Cloud Scheduler job (path 26)
         ├── deployment-manager/ # DM deployment (path 28)
-        └── composer/          # Composer environment (path 30)
+        ├── composer/          # Composer environment (path 30)
+        └── dataflow/          # Dataflow streaming job (path 32)
 ```
 
 ## References

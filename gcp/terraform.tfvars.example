@@ -37,7 +37,7 @@ gcp_project_id = "your-test-project-id"
 # =============================================================================
 # OPTIONAL: GCP ORGANIZATION
 # =============================================================================
-# Required only for privesc42 (orgpolicy.policy.set).
+# Required only for privesc46 (orgpolicy.policy.set).
 # Most privesc paths work without an organization.
 # If set with create_project = true, the project will be created under the org.
 #
@@ -57,10 +57,12 @@ gcp_project_id = "your-test-project-id"
 #
 # When enabled, both the IAM resources AND target infrastructure are created.
 
-# --- Compute-based paths (creates VM, ~$2-5/month) ---
-# enable_privesc11 = true  # setMetadata-compute: Add SSH keys via metadata
-# enable_privesc12 = true  # osLogin: SSH via OS Login
-# enable_privesc13 = true  # setServiceAccount: Swap SA on existing VM
+# --- Compute-based paths (creates VM, ~$2-5/month each) ---
+# enable_privesc11 = true  # setMetadata: Manual SSH key injection
+# enable_privesc12 = true  # setCommonInstanceMetadata: Project-level SSH key injection
+# enable_privesc13 = true  # osLogin: SSH via OS Login
+# enable_privesc14 = true  # setServiceAccount: Swap SA on existing VM
+# enable_lateral7  = true  # existingSSH: Lateral movement via pre-installed SSH key
 
 # --- Cloud Functions paths (creates function, free when idle) ---
 # enable_privesc16 = true  # updateFunction: Modify function code
@@ -69,8 +71,17 @@ gcp_project_id = "your-test-project-id"
 # --- Cloud Run paths (creates service, free when idle) ---
 # enable_privesc19 = true  # run.services.update: Modify service
 
+# --- Dataflow paths (creates streaming job, ~$0.05-0.10/hr) ---
+# enable_privesc32 = true  # dataflow.jobs.updateContents: Hijack streaming job
+
+# --- Update paths (hijack existing infrastructure) ---
+# enable_privesc38 = true  # notebooks.instances.setIamPolicy: Hijack existing notebook
+# enable_privesc41 = true  # workflows.workflows.update: Hijack existing workflow
+# enable_privesc43 = true  # eventarc.triggers.update: Hijack existing trigger
+# enable_privesc45 = true  # iam.workloadIdentityPoolProviders.update: Hijack existing provider
+
 # --- Organization paths (requires gcp_organization_id) ---
-# enable_privesc42 = true  # orgpolicy.policy.set: Modify org policies
+# enable_privesc46 = true  # orgpolicy.policy.set: Modify org policies
 
 # =============================================================================
 # ENABLE ALL DISABLED PATHS
@@ -80,7 +91,11 @@ gcp_project_id = "your-test-project-id"
 # enable_privesc11 = true
 # enable_privesc12 = true
 # enable_privesc13 = true
-# enable_privesc16 = true
-# enable_privesc17 = true
+# enable_privesc14 = true
+# enable_lateral7  = true
 # enable_privesc19 = true
-# enable_privesc42 = true  # Requires gcp_organization_id
+# enable_privesc38 = true
+# enable_privesc41 = true
+# enable_privesc43 = true
+# enable_privesc45 = true
+# enable_privesc46 = true  # Requires gcp_organization_id

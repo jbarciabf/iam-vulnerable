@@ -1,0 +1,5 @@
+gcp_project_id = "your-test-project-id"
+
+# Optional: TLS certificate via Let's Encrypt (uses sslip.io by default - no DNS setup needed)
+# enable_certbot = true
+# dns_name       = "attacker.example.com"  # optional: use your own domain instead of sslip.io

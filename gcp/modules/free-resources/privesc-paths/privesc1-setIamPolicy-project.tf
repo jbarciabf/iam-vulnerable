@@ -14,8 +14,8 @@
 # REAL-WORLD IMPACT: Critical - Full project takeover
 
 resource "google_service_account" "privesc1_set_iam_policy" {
-  account_id   = "${var.resource_prefix}1-set-iam-policy"
-  display_name = "Privesc1 - setIamPolicy on Project"
+  account_id   = "${var.resource_prefix}01-set-iam-policy"
+  display_name = "Privesc01 - setIamPolicy on Project"
   description  = "Can escalate by modifying project IAM policy"
   project      = var.project_id
 
@@ -28,8 +28,6 @@ resource "google_project_iam_custom_role" "set_iam_policy" {
   title       = "Privesc01 - Set Project IAM Policy"
   description = "Vulnerable: Can read and modify project IAM policy"
   permissions = [
-    "resourcemanager.projects.get",
-    "resourcemanager.projects.getIamPolicy",
     "resourcemanager.projects.setIamPolicy",
   ]
   project = var.project_id

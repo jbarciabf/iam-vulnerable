@@ -1,11 +1,11 @@
-# Privesc Path 42: Explicit Deny Bypass via Service Account Chaining
+# Privesc Path 47: Explicit Deny Bypass via Service Account Chaining
 #
 # VULNERABILITY: A service account that is explicitly denied permissions can
 # still escalate by impersonating another SA that isn't denied.
 #
 # EXPLOITATION:
 #   1. The attacker SA has explicit deny on sensitive actions
-#   2. But the attacker SA can impersonate another SA (privesc42-medium-priv-sa)
+#   2. But the attacker SA can impersonate another SA (privesc47-medium-priv-sa)
 #   3. The medium-priv SA is not denied the same actions
 #   4. Impersonate medium-priv to bypass the deny
 #
@@ -14,46 +14,46 @@
 # REAL-WORLD IMPACT: High - Deny policy bypass
 #
 # RESOURCES:
-#   - privesc42-deny-bypass: Starting SA (attacker impersonates this)
-#   - privesc42-medium-priv-sa: Intermediate SA used to bypass deny policies
+#   - privesc47-deny-bypass: Starting SA (attacker impersonates this)
+#   - privesc47-medium-priv-sa: Intermediate SA used to bypass deny policies
 
-resource "google_service_account" "privesc42_deny_bypass" {
-  account_id   = "${var.resource_prefix}42-deny-bypass"
-  display_name = "Privesc42 - Deny Bypass"
+resource "google_service_account" "privesc47_deny_bypass" {
+  account_id   = "${var.resource_prefix}47-deny-bypass"
+  display_name = "Privesc47 - Deny Bypass"
   description  = "Can escalate by bypassing explicit deny via SA chaining"
   project      = var.project_id
 
-  depends_on = [time_sleep.batch10_delay]
+  depends_on = [time_sleep.batch11_delay]
 }
 
-# Medium-privilege SA specific to Path 42
+# Medium-privilege SA specific to Path 47
 # This SA is NOT subject to the deny policy, allowing bypass
-resource "google_service_account" "privesc42_medium_priv" {
-  account_id   = "${var.resource_prefix}42-medium-priv-sa"
-  display_name = "Privesc42 - Medium Privilege SA"
-  description  = "Intermediate SA for path 42 deny bypass - not subject to deny policies"
+resource "google_service_account" "privesc47_medium_priv" {
+  account_id   = "${var.resource_prefix}47-medium-priv-sa"
+  display_name = "Privesc47 - Medium Privilege SA"
+  description  = "Intermediate SA for path 47 deny bypass - not subject to deny policies"
   project      = var.project_id
 
-  depends_on = [time_sleep.batch10_delay]
+  depends_on = [time_sleep.batch11_delay]
 }
 
 # Grant Editor role to the medium-priv SA (can do most things except IAM)
-resource "google_project_iam_member" "privesc42_medium_priv_editor" {
+resource "google_project_iam_member" "privesc47_medium_priv_editor" {
   project = var.project_id
   role    = "roles/editor"
-  member  = "serviceAccount:${google_service_account.privesc42_medium_priv.email}"
+  member  = "serviceAccount:${google_service_account.privesc47_medium_priv.email}"
 }
 
 # Grant impersonation on the medium privilege SA
-resource "google_service_account_iam_member" "privesc42_impersonate_medium" {
-  service_account_id = google_service_account.privesc42_medium_priv.name
+resource "google_service_account_iam_member" "privesc47_impersonate_medium" {
+  service_account_id = google_service_account.privesc47_medium_priv.name
   role               = "roles/iam.serviceAccountTokenCreator"
-  member             = "serviceAccount:${google_service_account.privesc42_deny_bypass.email}"
+  member             = "serviceAccount:${google_service_account.privesc47_deny_bypass.email}"
 }
 
 # Allow the attacker to impersonate the starting service account
-resource "google_service_account_iam_member" "privesc42_impersonate" {
-  service_account_id = google_service_account.privesc42_deny_bypass.name
+resource "google_service_account_iam_member" "privesc47_impersonate" {
+  service_account_id = google_service_account.privesc47_deny_bypass.name
   role               = "roles/iam.serviceAccountTokenCreator"
   member             = var.attacker_member
 }

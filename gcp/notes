@@ -1,0 +1,122 @@
+  1. gcloud config set auth/impersonate_service_account (global, sticky)
+  - Applies to all subsequent gcloud commands              
+  - Must unset before switching to another SA          
+  - Annoying for frequent switching                         
+
+                                                 
+  2. --impersonate-service-account= flag (per-command)
+  - No global state to manage
+  - Works on every gcloud command
+  - Best for one-off commands, verbose for repeated use
+
+  3. gcloud config configurations (named profiles)
+  - Create named configs that each impersonate a different SA:
+  gcloud config configurations create viewer
+  gcloud config set auth/impersonate_service_account iam-vulnerable-viewer@$PROJECT_ID.iam.gserviceaccount.com
+  gcloud config set project $PROJECT_ID
+
+  gcloud config configurations create privesc1
+  gcloud config set auth/impersonate_service_account privesc1-set-iam-policy@$PROJECT_ID.iam.gserviceaccount.com
+  gcloud config set project $PROJECT_ID
+
+  # Switch instantly between them
+  gcloud config configurations activate viewer
+  gcloud config configurations activate privesc1
+  - This is the fastest way to switch between SAs
+
+  4. Access token in environment variable (for API/curl)
+  export TOKEN=$(gcloud auth print-access-token --impersonate-service-account=SA_EMAIL)
+  curl -H "Authorization: Bearer $TOKEN" https://...
+
+  5. Shell alias/function (wrapper)
+  # Quick helper
+  impersonate() { gcloud config set auth/impersonate_service_account "$1@$PROJECT_ID.iam.gserviceaccount.com"; }
+  impersonate iam-vulnerable-viewer
+  impersonate privesc1-set-iam-policy
+
+  The named configurations (option 3) is the closest thing GCP has to "profile switching" like AWS. It's the cleanest for this project where you'd want a viewer config for enumeration and then switch to a specific privesc SA config for exploitation.
+
+
+
+
+### Enumerate IAM (Discover Privesc Paths)
+
+```bash
+# List all service accounts - reveals the attacker SAs and high-priv target
+gcloud iam service-accounts list --project=$IAMVULN_PROJECT_ID --impersonate-service-account=$VIEWER_SA
+
+# Get project IAM policy - shows who has what role
+gcloud projects get-iam-policy $IAMVULN_PROJECT_ID \
+  --flatten="bindings[].members" \
+  --format="table(bindings.role, bindings.members)" \
+  --impersonate-service-account=$VIEWER_SA
+
+# List custom roles - reveals the vulnerable permissions granted to each SA
+gcloud iam roles list --project=$IAMVULN_PROJECT_ID --format="table(name, title)" --impersonate-service-account=$VIEWER_SA
+
+# Inspect a specific custom role to see its permissions
+gcloud iam roles describe ROLE_ID --project=$IAMVULN_PROJECT_ID --impersonate-service-account=$VIEWER_SA
+
+# Check who can impersonate a specific SA (Token Creator bindings)
+gcloud iam service-accounts get-iam-policy \
+  SERVICE_ACCOUNT_EMAIL --project=$IAMVULN_PROJECT_ID \
+  --impersonate-service-account=$VIEWER_SA
+
+# Check who has actAs on the high-priv SA
+gcloud iam service-accounts get-iam-policy \
+  privesc-high-priv-sa@$IAMVULN_PROJECT_ID.iam.gserviceaccount.com --project=$IAMVULN_PROJECT_ID \
+  --impersonate-service-account=$VIEWER_SA
+```
+
+### Enumerate Resources by Service
+
+```bash
+# Compute Engine (Paths 10-16)
+gcloud compute instances list --project=$IAMVULN_PROJECT_ID
+gcloud compute instance-templates list --project=$IAMVULN_PROJECT_ID
+
+# Cloud Functions (Paths 17-18)
+gcloud functions list --project=$IAMVULN_PROJECT_ID
+
+# Cloud Run (Paths 19-22)
+gcloud run services list --project=$IAMVULN_PROJECT_ID
+gcloud run jobs list --project=$IAMVULN_PROJECT_ID
+
+# Cloud Build (Paths 23-24)
+gcloud builds triggers list --project=$IAMVULN_PROJECT_ID
+
+# Cloud Scheduler (Paths 25-26)
+gcloud scheduler jobs list --project=$IAMVULN_PROJECT_ID --location=us-central1
+
+# Deployment Manager (Paths 27-28)
+gcloud deployment-manager deployments list --project=$IAMVULN_PROJECT_ID
+
+# Composer (Paths 29-30)
+gcloud composer environments list --project=$IAMVULN_PROJECT_ID --locations=-
+
+# Dataflow (Paths 31-32)
+gcloud dataflow jobs list --project=$IAMVULN_PROJECT_ID --region=us-central1
+
+# Dataproc (Paths 33-34)
+gcloud dataproc clusters list --project=$IAMVULN_PROJECT_ID --region=-
+
+# GKE (Paths 35-36)
+gcloud container clusters list --project=$IAMVULN_PROJECT_ID
+
+# Notebooks (Paths 37-38)
+gcloud notebooks instances list --project=$IAMVULN_PROJECT_ID --location=-
+
+# Workflows (Paths 40-41)
+gcloud workflows list --project=$IAMVULN_PROJECT_ID --location=us-central1
+
+# Eventarc (Paths 42-43)
+gcloud eventarc triggers list --project=$IAMVULN_PROJECT_ID --location=-
+
+# Workload Identity (Paths 44-45)
+gcloud iam workload-identity-pools list --project=$IAMVULN_PROJECT_ID --location=global
+
+# Secrets & Storage (Lateral Paths)
+gcloud secrets list --project=$IAMVULN_PROJECT_ID
+gsutil ls -p $IAMVULN_PROJECT_ID
+bq ls --project_id=$IAMVULN_PROJECT_ID
+```
