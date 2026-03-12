@@ -1,4 +1,4 @@
-# Privesc Path 38: Vertex AI Notebooks Update (Set IAM Policy)
+# Privesc Path 37: Vertex AI Notebooks Update (Set IAM Policy)
 #
 # VULNERABILITY: A service account with notebooks.instances.setIamPolicy can
 # grant itself access to an existing Vertex AI notebook instance running with
@@ -16,15 +16,15 @@
 #
 # REAL-WORLD IMPACT: Critical - Hijack existing notebook to access privileged SA
 #
-# NOTE: This path is DISABLED by default (enable_privesc38 = false)
+# NOTE: This path is DISABLED by default (enable_privesc37 = false)
 #       Needs verification that setIamPolicy on notebooks grants code execution.
-#       Enable with: enable_privesc38 = true
+#       Enable with: enable_privesc37 = true
 
-resource "google_service_account" "privesc38_notebooks_update" {
-  count = var.enable_privesc38 ? 1 : 0
+resource "google_service_account" "privesc37_notebooks_update" {
+  count = var.enable_privesc37 ? 1 : 0
 
-  account_id   = "${var.resource_prefix}38-notebooks-upd"
-  display_name = "Privesc38 - notebooks.instances.setIamPolicy"
+  account_id   = "${var.resource_prefix}37-notebooks-upd"
+  display_name = "Privesc37 - notebooks.instances.setIamPolicy"
   description  = "Can escalate via notebook IAM policy modification"
   project      = var.project_id
 
@@ -32,11 +32,11 @@ resource "google_service_account" "privesc38_notebooks_update" {
 }
 
 # Custom role with Notebooks IAM policy permissions
-resource "google_project_iam_custom_role" "privesc38_notebooks_update" {
-  count = var.enable_privesc38 ? 1 : 0
+resource "google_project_iam_custom_role" "privesc37_notebooks_update" {
+  count = var.enable_privesc37 ? 1 : 0
 
-  role_id     = "${var.resource_prefix}_38_notebooks_update"
-  title       = "Privesc38 Notebook IAM Policy Setter"
+  role_id     = "${var.resource_prefix}_37_notebooks_update"
+  title       = "Privesc37 Notebook IAM Policy Setter"
   description = "Can set IAM policy on Vertex AI notebook instances"
   project     = var.project_id
 
@@ -49,28 +49,28 @@ resource "google_project_iam_custom_role" "privesc38_notebooks_update" {
 }
 
 # Grant the custom role at project level
-resource "google_project_iam_member" "privesc38_notebooks_update" {
-  count = var.enable_privesc38 ? 1 : 0
+resource "google_project_iam_member" "privesc37_notebooks_update" {
+  count = var.enable_privesc37 ? 1 : 0
 
   project = var.project_id
-  role    = google_project_iam_custom_role.privesc38_notebooks_update[0].id
-  member  = "serviceAccount:${google_service_account.privesc38_notebooks_update[0].email}"
+  role    = google_project_iam_custom_role.privesc37_notebooks_update[0].id
+  member  = "serviceAccount:${google_service_account.privesc37_notebooks_update[0].email}"
 }
 
 # Grant actAs on the high-privilege SA (needed to set self as SA on the notebook via IAM policy)
-resource "google_service_account_iam_member" "privesc38_actas" {
-  count = var.enable_privesc38 ? 1 : 0
+resource "google_service_account_iam_member" "privesc37_actas" {
+  count = var.enable_privesc37 ? 1 : 0
 
   service_account_id = google_service_account.high_priv.name
   role               = "roles/iam.serviceAccountUser"
-  member             = "serviceAccount:${google_service_account.privesc38_notebooks_update[0].email}"
+  member             = "serviceAccount:${google_service_account.privesc37_notebooks_update[0].email}"
 }
 
 # Allow the attacker to impersonate this service account
-resource "google_service_account_iam_member" "privesc38_impersonate" {
-  count = var.enable_privesc38 ? 1 : 0
+resource "google_service_account_iam_member" "privesc37_impersonate" {
+  count = var.enable_privesc37 ? 1 : 0
 
-  service_account_id = google_service_account.privesc38_notebooks_update[0].name
+  service_account_id = google_service_account.privesc37_notebooks_update[0].name
   role               = "roles/iam.serviceAccountTokenCreator"
   member             = var.attacker_member
 }

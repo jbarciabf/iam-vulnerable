@@ -1,4 +1,4 @@
-# Privesc Path 23a: actAs + Cloud Build
+# Privesc Path 22a: actAs + Cloud Build
 #
 # VULNERABILITY: A service account with iam.serviceAccounts.actAs on a high-priv
 # SA plus cloudbuild.builds.create can run builds as that SA.
@@ -21,9 +21,9 @@
 #     - cloudbuild.builds.get (to check build status and view logs)
 #     - logging.logEntries.list (to view build logs - optional but useful)
 
-resource "google_service_account" "privesc23a_actas_cloudbuild" {
-  account_id   = "${var.resource_prefix}23a-actas-cloudbuild"
-  display_name = "Privesc23a - actAs + Cloud Build"
+resource "google_service_account" "privesc22a_actas_cloudbuild" {
+  account_id   = "${var.resource_prefix}22a-actas-cloudbuild"
+  display_name = "Privesc22a - actAs + Cloud Build"
   description  = "Can escalate via Cloud Build with high-priv SA"
   project      = var.project_id
 
@@ -31,16 +31,16 @@ resource "google_service_account" "privesc23a_actas_cloudbuild" {
 }
 
 # Grant actAs on the high-privilege service account
-resource "google_service_account_iam_member" "privesc23a_actas" {
+resource "google_service_account_iam_member" "privesc22a_actas" {
   service_account_id = google_service_account.high_priv.name
   role               = "roles/iam.serviceAccountUser"
-  member             = "serviceAccount:${google_service_account.privesc23a_actas_cloudbuild.email}"
+  member             = "serviceAccount:${google_service_account.privesc22a_actas_cloudbuild.email}"
 }
 
 # Custom role with minimal Cloud Build permissions
-resource "google_project_iam_custom_role" "privesc23a_cloudbuild" {
-  role_id     = "${var.resource_prefix}_23a_cloudbuild"
-  title       = "Privesc23a - Cloud Build Submit"
+resource "google_project_iam_custom_role" "privesc22a_cloudbuild" {
+  role_id     = "${var.resource_prefix}_22a_cloudbuild"
+  title       = "Privesc22a - Cloud Build Submit"
   description = "Minimal permissions for Cloud Build job submission with SA"
   project     = var.project_id
 
@@ -57,15 +57,15 @@ resource "google_project_iam_custom_role" "privesc23a_cloudbuild" {
 }
 
 # Grant Cloud Build permissions
-resource "google_project_iam_member" "privesc23a_cloudbuild" {
+resource "google_project_iam_member" "privesc22a_cloudbuild" {
   project = var.project_id
-  role    = google_project_iam_custom_role.privesc23a_cloudbuild.id
-  member  = "serviceAccount:${google_service_account.privesc23a_actas_cloudbuild.email}"
+  role    = google_project_iam_custom_role.privesc22a_cloudbuild.id
+  member  = "serviceAccount:${google_service_account.privesc22a_actas_cloudbuild.email}"
 }
 
 # Allow the attacker to impersonate this service account
-resource "google_service_account_iam_member" "privesc23a_impersonate" {
-  service_account_id = google_service_account.privesc23a_actas_cloudbuild.name
+resource "google_service_account_iam_member" "privesc22a_impersonate" {
+  service_account_id = google_service_account.privesc22a_actas_cloudbuild.name
   role               = "roles/iam.serviceAccountTokenCreator"
   member             = var.attacker_member
 }

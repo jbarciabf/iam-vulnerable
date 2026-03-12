@@ -1,4 +1,4 @@
-# Privesc Path 22: Cloud Run Jobs Update
+# Privesc Path 21: Cloud Run Jobs Update
 #
 # VULNERABILITY: A user with run.jobs.update and actAs can update existing
 # Cloud Run jobs to execute with a high-privilege service account.
@@ -15,13 +15,13 @@
 #
 # COST: < $0.10/month (Cloud Build, Artifact Registry, Cloud Run)
 #
-# NOTE: Disabled by default. Enable with enable_privesc22 = true
+# NOTE: Disabled by default. Enable with enable_privesc21 = true
 
-resource "google_service_account" "privesc22_run_jobs_update" {
-  count = var.enable_privesc22 ? 1 : 0
+resource "google_service_account" "privesc21_run_jobs_update" {
+  count = var.enable_privesc21 ? 1 : 0
 
-  account_id   = "${var.resource_prefix}22-run-jobs-update"
-  display_name = "Privesc22 - Cloud Run Jobs Update"
+  account_id   = "${var.resource_prefix}21-run-jobs-update"
+  display_name = "Privesc21 - Cloud Run Jobs Update"
   description  = "Can escalate via run.jobs.update"
   project      = var.project_id
 
@@ -29,11 +29,11 @@ resource "google_service_account" "privesc22_run_jobs_update" {
 }
 
 # Create a custom role with Cloud Run jobs update permissions
-resource "google_project_iam_custom_role" "privesc22_run_jobs_update" {
-  count = var.enable_privesc22 ? 1 : 0
+resource "google_project_iam_custom_role" "privesc21_run_jobs_update" {
+  count = var.enable_privesc21 ? 1 : 0
 
-  role_id     = "${var.resource_prefix}_22_run_jobs_update"
-  title       = "Privesc22 Cloud Run Jobs Updater"
+  role_id     = "${var.resource_prefix}_21_run_jobs_update"
+  title       = "Privesc21 Cloud Run Jobs Updater"
   description = "Can update Cloud Run jobs"
   project     = var.project_id
 
@@ -48,28 +48,28 @@ resource "google_project_iam_custom_role" "privesc22_run_jobs_update" {
 }
 
 # Grant the custom role at project level
-resource "google_project_iam_member" "privesc22_run_jobs_update" {
-  count = var.enable_privesc22 ? 1 : 0
+resource "google_project_iam_member" "privesc21_run_jobs_update" {
+  count = var.enable_privesc21 ? 1 : 0
 
   project = var.project_id
-  role    = google_project_iam_custom_role.privesc22_run_jobs_update[0].id
-  member  = "serviceAccount:${google_service_account.privesc22_run_jobs_update[0].email}"
+  role    = google_project_iam_custom_role.privesc21_run_jobs_update[0].id
+  member  = "serviceAccount:${google_service_account.privesc21_run_jobs_update[0].email}"
 }
 
 # Grant actAs on the high-privilege SA
-resource "google_service_account_iam_member" "privesc22_actas" {
-  count = var.enable_privesc22 ? 1 : 0
+resource "google_service_account_iam_member" "privesc21_actas" {
+  count = var.enable_privesc21 ? 1 : 0
 
   service_account_id = google_service_account.high_priv.name
   role               = "roles/iam.serviceAccountUser"
-  member             = "serviceAccount:${google_service_account.privesc22_run_jobs_update[0].email}"
+  member             = "serviceAccount:${google_service_account.privesc21_run_jobs_update[0].email}"
 }
 
 # Allow the attacker to impersonate this service account
-resource "google_service_account_iam_member" "privesc22_impersonate" {
-  count = var.enable_privesc22 ? 1 : 0
+resource "google_service_account_iam_member" "privesc21_impersonate" {
+  count = var.enable_privesc21 ? 1 : 0
 
-  service_account_id = google_service_account.privesc22_run_jobs_update[0].name
+  service_account_id = google_service_account.privesc21_run_jobs_update[0].name
   role               = "roles/iam.serviceAccountTokenCreator"
   member             = var.attacker_member
 }

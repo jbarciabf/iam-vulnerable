@@ -26,21 +26,13 @@ resource "google_service_account" "privesc13_os_login" {
   depends_on = [time_sleep.batch4_delay]
 }
 
-# Grant OS Login permissions
+# OS Login requires the predefined role - custom roles with the same permissions
+# don't work because the OS Login PAM module checks for the predefined role name
 resource "google_project_iam_member" "privesc13_os_login" {
   count = var.enable_privesc13 ? 1 : 0
 
   project = var.project_id
   role    = "roles/compute.osAdminLogin"
-  member  = "serviceAccount:${google_service_account.privesc13_os_login[0].email}"
-}
-
-# Also need to be able to list/get instances
-resource "google_project_iam_member" "privesc13_compute_viewer" {
-  count = var.enable_privesc13 ? 1 : 0
-
-  project = var.project_id
-  role    = "roles/compute.viewer"
   member  = "serviceAccount:${google_service_account.privesc13_os_login[0].email}"
 }
 
@@ -54,8 +46,9 @@ resource "google_service_account_iam_member" "privesc13_impersonate" {
 }
 
 # Grant actAs on high-priv SA (required for OS Login to the VM)
-# OS Login requires serviceAccountUser on the VM's attached SA because
-# logging in means "acting as" that service account
+# Note: Using roles/iam.serviceAccountUser because OS Login PAM module
+# doesn't evaluate IAM conditions on custom roles for actAs checks.
+# This adds get/list permissions on the SA, but is required for SSH to work.
 resource "google_service_account_iam_member" "privesc13_actas_high_priv" {
   count = var.enable_privesc13 ? 1 : 0
 

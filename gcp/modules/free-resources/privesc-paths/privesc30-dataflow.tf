@@ -1,4 +1,4 @@
-# Privesc Path 31: Dataflow Job
+# Privesc Path 30: Dataflow Job
 #
 # VULNERABILITY: A service account with dataflow.jobs.create and actAs can
 # create Dataflow jobs running with a high-priv SA.
@@ -21,9 +21,9 @@
 #     - dataflow.jobs.get (to check job status)
 #     - compute.* (Dataflow uses GCE workers - handled by Dataflow service agent)
 
-resource "google_service_account" "privesc31_dataflow" {
-  account_id   = "${var.resource_prefix}31-dataflow"
-  display_name = "Privesc31 - Dataflow"
+resource "google_service_account" "privesc30_dataflow" {
+  account_id   = "${var.resource_prefix}30-dataflow"
+  display_name = "Privesc30 - Dataflow"
   description  = "Can escalate via Dataflow job"
   project      = var.project_id
 
@@ -31,9 +31,9 @@ resource "google_service_account" "privesc31_dataflow" {
 }
 
 # Custom role with minimal Dataflow permissions
-resource "google_project_iam_custom_role" "privesc31_dataflow" {
-  role_id     = "${var.resource_prefix}_31_dataflow"
-  title       = "Privesc31 - Dataflow Job Creator"
+resource "google_project_iam_custom_role" "privesc30_dataflow" {
+  role_id     = "${var.resource_prefix}_30_dataflow"
+  title       = "Privesc30 - Dataflow Job Creator"
   description = "Minimal permissions for Dataflow job creation with SA"
   project     = var.project_id
 
@@ -52,22 +52,22 @@ resource "google_project_iam_custom_role" "privesc31_dataflow" {
 }
 
 # Grant Dataflow permissions
-resource "google_project_iam_member" "privesc31_dataflow" {
+resource "google_project_iam_member" "privesc30_dataflow" {
   project = var.project_id
-  role    = google_project_iam_custom_role.privesc31_dataflow.id
-  member  = "serviceAccount:${google_service_account.privesc31_dataflow.email}"
+  role    = google_project_iam_custom_role.privesc30_dataflow.id
+  member  = "serviceAccount:${google_service_account.privesc30_dataflow.email}"
 }
 
 # Grant actAs on the high-privilege service account
-resource "google_service_account_iam_member" "privesc31_actas" {
+resource "google_service_account_iam_member" "privesc30_actas" {
   service_account_id = google_service_account.high_priv.name
   role               = "roles/iam.serviceAccountUser"
-  member             = "serviceAccount:${google_service_account.privesc31_dataflow.email}"
+  member             = "serviceAccount:${google_service_account.privesc30_dataflow.email}"
 }
 
 # Allow the attacker to impersonate this service account
-resource "google_service_account_iam_member" "privesc31_impersonate" {
-  service_account_id = google_service_account.privesc31_dataflow.name
+resource "google_service_account_iam_member" "privesc30_impersonate" {
+  service_account_id = google_service_account.privesc30_dataflow.name
   role               = "roles/iam.serviceAccountTokenCreator"
   member             = var.attacker_member
 }

@@ -89,20 +89,20 @@ module "privesc-paths" {
   enable_privesc13  = var.enable_privesc13
   enable_privesc14  = var.enable_privesc14
   enable_lateral7   = var.enable_lateral7
+  enable_privesc17  = var.enable_privesc17
   enable_privesc18  = var.enable_privesc18
   enable_privesc19  = var.enable_privesc19
   enable_privesc20  = var.enable_privesc20
   enable_privesc21  = var.enable_privesc21
-  enable_privesc22  = var.enable_privesc22
-  enable_privesc26  = var.enable_privesc26
-  enable_privesc28  = var.enable_privesc28
-  enable_privesc30  = var.enable_privesc30
-  enable_privesc32  = var.enable_privesc32
-  enable_privesc38  = var.enable_privesc38
-  enable_privesc41  = var.enable_privesc41
-  enable_privesc43  = var.enable_privesc43
+  enable_privesc25  = var.enable_privesc25
+  enable_privesc27  = var.enable_privesc27
+  enable_privesc29  = var.enable_privesc29
+  enable_privesc31  = var.enable_privesc31
+  enable_privesc37  = var.enable_privesc37
+  enable_privesc40  = var.enable_privesc40
+  enable_privesc42  = var.enable_privesc42
+  enable_privesc44  = var.enable_privesc44
   enable_privesc45  = var.enable_privesc45
-  enable_privesc46  = var.enable_privesc46
 
   depends_on = [google_project_service.serviceusage]
 }
@@ -146,12 +146,12 @@ module "compute" {
   enable_lateral7  = var.enable_lateral7
 }
 
-# Cloud Function for privesc18 (updateFunction)
+# Cloud Function for privesc17 (updateFunction)
 # Created when function-based privesc path is enabled
 # Cost: Free when idle (pay per invocation)
 module "cloud-functions" {
   source = "./modules/non-free-resources/cloud-functions"
-  count  = var.enable_privesc18 ? 1 : 0
+  count  = var.enable_privesc17 ? 1 : 0
 
   project_id      = var.gcp_project_id
   region          = var.gcp_region
@@ -160,16 +160,16 @@ module "cloud-functions" {
   high_priv_sa_email = module.privesc-paths.high_priv_service_account_email
 }
 
-# Cloud Run infrastructure for privesc19/20/21/22 (run.services.create/update, run.jobs.create/update)
+# Cloud Run infrastructure for privesc18/19/20/21 (run.services.create/update, run.jobs.create/update)
 # Created when any Cloud Run privesc path is enabled
 # Cost: < $0.10/month (Cloud Build, Artifact Registry, Cloud Run all have generous free tiers)
 # Includes:
 #   - Token-extractor container image (built via Cloud Build)
-#   - Target Cloud Run service running as high-priv SA (path 20 only)
-#   - Target Cloud Run job running as high-priv SA (path 22 only)
+#   - Target Cloud Run service running as high-priv SA (path 19 only)
+#   - Target Cloud Run job running as high-priv SA (path 21 only)
 module "cloud-run" {
   source = "./modules/non-free-resources/cloud-run"
-  count  = (var.enable_privesc19 || var.enable_privesc20 || var.enable_privesc21 || var.enable_privesc22) ? 1 : 0
+  count  = (var.enable_privesc18 || var.enable_privesc19 || var.enable_privesc20 || var.enable_privesc21) ? 1 : 0
 
   project_id      = var.gcp_project_id
   region          = var.gcp_region
@@ -178,23 +178,23 @@ module "cloud-run" {
   high_priv_sa_email = module.privesc-paths.high_priv_service_account_email
 
   # Pass SA emails for Artifact Registry access
+  privesc18_sa_email = module.privesc-paths.privesc18_sa_email
   privesc19_sa_email = module.privesc-paths.privesc19_sa_email
   privesc20_sa_email = module.privesc-paths.privesc20_sa_email
   privesc21_sa_email = module.privesc-paths.privesc21_sa_email
-  privesc22_sa_email = module.privesc-paths.privesc22_sa_email
 
-  # Only create target service for path 20
-  enable_privesc20 = var.enable_privesc20
-  # Only create target job for path 22
-  enable_privesc22 = var.enable_privesc22
+  # Only create target service for path 19
+  enable_privesc19 = var.enable_privesc19
+  # Only create target job for path 21
+  enable_privesc21 = var.enable_privesc21
 }
 
-# Cloud Scheduler job for privesc26 (cloudscheduler.jobs.update)
+# Cloud Scheduler job for privesc25 (cloudscheduler.jobs.update)
 # Created when scheduler update privesc path is enabled
 # Cost: Minimal (pay per job execution)
 module "cloud-scheduler" {
   source = "./modules/non-free-resources/cloud-scheduler"
-  count  = var.enable_privesc26 ? 1 : 0
+  count  = var.enable_privesc25 ? 1 : 0
 
   project_id = var.gcp_project_id
   region     = var.gcp_region
@@ -202,24 +202,24 @@ module "cloud-scheduler" {
   depends_on = [module.privesc-paths]
 }
 
-# Deployment Manager deployment for privesc28 (deploymentmanager.deployments.update)
+# Deployment Manager deployment for privesc27 (deploymentmanager.deployments.update)
 # Created when DM update privesc path is enabled
 # Cost: ~$0.02/month (GCS bucket for placeholder deployment)
 module "deployment-manager" {
   source = "./modules/non-free-resources/deployment-manager"
-  count  = var.enable_privesc28 ? 1 : 0
+  count  = var.enable_privesc27 ? 1 : 0
 
   project_id = var.gcp_project_id
 
   depends_on = [module.privesc-paths]
 }
 
-# Cloud Composer environment for privesc30 (composer.environments.update)
+# Cloud Composer environment for privesc29 (composer.environments.update)
 # Created when composer update privesc path is enabled
 # ⚠️  EXTREME COST WARNING: ~$400/month! DELETE IMMEDIATELY after testing!
 module "composer" {
   source = "./modules/non-free-resources/composer"
-  count  = var.enable_privesc30 ? 1 : 0
+  count  = var.enable_privesc29 ? 1 : 0
 
   project_id         = var.gcp_project_id
   high_priv_sa_email = module.privesc-paths.high_priv_service_account_email
@@ -227,12 +227,12 @@ module "composer" {
   depends_on = [module.privesc-paths]
 }
 
-# Dataflow streaming job for privesc32 (dataflow.jobs.updateContents)
+# Dataflow streaming job for privesc31 (dataflow.jobs.updateContents)
 # Created when dataflow update privesc path is enabled
 # Cost: ~$0.05-0.10/hr while running
 module "dataflow" {
   source = "./modules/non-free-resources/dataflow"
-  count  = var.enable_privesc32 ? 1 : 0
+  count  = var.enable_privesc31 ? 1 : 0
 
   project_id         = var.gcp_project_id
   region             = var.gcp_region

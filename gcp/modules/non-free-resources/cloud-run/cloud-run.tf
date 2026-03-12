@@ -58,10 +58,10 @@ resource "google_artifact_registry_repository_iam_binding" "attacker_reader" {
   role       = "roles/artifactregistry.reader"
   members = compact([
     var.attacker_member,
+    var.privesc18_sa_email != null ? "serviceAccount:${var.privesc18_sa_email}" : null,
     var.privesc19_sa_email != null ? "serviceAccount:${var.privesc19_sa_email}" : null,
     var.privesc20_sa_email != null ? "serviceAccount:${var.privesc20_sa_email}" : null,
     var.privesc21_sa_email != null ? "serviceAccount:${var.privesc21_sa_email}" : null,
-    var.privesc22_sa_email != null ? "serviceAccount:${var.privesc22_sa_email}" : null,
   ])
 }
 
@@ -94,9 +94,9 @@ resource "null_resource" "build_token_extractor" {
 # Cloud Run service with high-priv SA (target for Path 20: run.services.update)
 # Only created when path 20 is enabled - path 19 creates its own service
 resource "google_cloud_run_v2_service" "privesc_service" {
-  count = var.enable_privesc20 ? 1 : 0
+  count = var.enable_privesc19 ? 1 : 0
 
-  name     = "privesc20-run-service"
+  name     = "privesc19-run-service"
   project  = var.project_id
   location = var.region
 
@@ -131,9 +131,9 @@ resource "google_cloud_run_v2_service" "privesc_service" {
 # Cloud Run job with high-priv SA (target for Path 22: run.jobs.update)
 # Only created when path 22 is enabled - path 21 creates its own job
 resource "google_cloud_run_v2_job" "privesc_job" {
-  count = var.enable_privesc22 ? 1 : 0
+  count = var.enable_privesc21 ? 1 : 0
 
-  name     = "privesc22-run-job"
+  name     = "privesc21-run-job"
   project  = var.project_id
   location = var.region
 
@@ -165,12 +165,12 @@ resource "google_cloud_run_v2_job" "privesc_job" {
 # Outputs
 output "service_name" {
   description = "Name of the target Cloud Run service (path 20 only)"
-  value       = var.enable_privesc20 ? google_cloud_run_v2_service.privesc_service[0].name : null
+  value       = var.enable_privesc19 ? google_cloud_run_v2_service.privesc_service[0].name : null
 }
 
 output "service_url" {
   description = "URL of the Cloud Run service (path 20 only)"
-  value       = var.enable_privesc20 ? google_cloud_run_v2_service.privesc_service[0].uri : null
+  value       = var.enable_privesc19 ? google_cloud_run_v2_service.privesc_service[0].uri : null
 }
 
 output "token_extractor_image" {
@@ -185,5 +185,5 @@ output "attached_service_account" {
 
 output "job_name" {
   description = "Name of the target Cloud Run job (path 22 only)"
-  value       = var.enable_privesc22 ? google_cloud_run_v2_job.privesc_job[0].name : null
+  value       = var.enable_privesc21 ? google_cloud_run_v2_job.privesc_job[0].name : null
 }

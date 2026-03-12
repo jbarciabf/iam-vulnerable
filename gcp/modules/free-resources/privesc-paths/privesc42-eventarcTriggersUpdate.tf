@@ -1,4 +1,4 @@
-# Privesc Path 43: Eventarc Triggers Update (Hijack Existing Trigger)
+# Privesc Path 42: Eventarc Triggers Update (Hijack Existing Trigger)
 #
 # VULNERABILITY: A service account with eventarc.triggers.update and actAs
 # can modify an existing Eventarc trigger to change its service account,
@@ -16,14 +16,14 @@
 #
 # REAL-WORLD IMPACT: Critical - Hijack event-driven infrastructure
 #
-# NOTE: This path is DISABLED by default (enable_privesc43 = false)
-#       Enable with: enable_privesc43 = true
+# NOTE: This path is DISABLED by default (enable_privesc42 = false)
+#       Enable with: enable_privesc42 = true
 
-resource "google_service_account" "privesc43_eventarc_update" {
-  count = var.enable_privesc43 ? 1 : 0
+resource "google_service_account" "privesc42_eventarc_update" {
+  count = var.enable_privesc42 ? 1 : 0
 
-  account_id   = "${var.resource_prefix}43-eventarc-upd"
-  display_name = "Privesc43 - eventarc.triggers.update"
+  account_id   = "${var.resource_prefix}42-eventarc-upd"
+  display_name = "Privesc42 - eventarc.triggers.update"
   description  = "Can escalate via Eventarc trigger update to change SA"
   project      = var.project_id
 
@@ -31,11 +31,11 @@ resource "google_service_account" "privesc43_eventarc_update" {
 }
 
 # Custom role with Eventarc trigger update permissions
-resource "google_project_iam_custom_role" "privesc43_eventarc_update" {
-  count = var.enable_privesc43 ? 1 : 0
+resource "google_project_iam_custom_role" "privesc42_eventarc_update" {
+  count = var.enable_privesc42 ? 1 : 0
 
-  role_id     = "${var.resource_prefix}_43_eventarc_update"
-  title       = "Privesc43 Eventarc Trigger Updater"
+  role_id     = "${var.resource_prefix}_42_eventarc_update"
+  title       = "Privesc42 Eventarc Trigger Updater"
   description = "Can update Eventarc triggers to change SA"
   project     = var.project_id
 
@@ -47,28 +47,28 @@ resource "google_project_iam_custom_role" "privesc43_eventarc_update" {
 }
 
 # Grant the custom role at project level
-resource "google_project_iam_member" "privesc43_eventarc_update" {
-  count = var.enable_privesc43 ? 1 : 0
+resource "google_project_iam_member" "privesc42_eventarc_update" {
+  count = var.enable_privesc42 ? 1 : 0
 
   project = var.project_id
-  role    = google_project_iam_custom_role.privesc43_eventarc_update[0].id
-  member  = "serviceAccount:${google_service_account.privesc43_eventarc_update[0].email}"
+  role    = google_project_iam_custom_role.privesc42_eventarc_update[0].id
+  member  = "serviceAccount:${google_service_account.privesc42_eventarc_update[0].email}"
 }
 
 # Grant actAs on the high-privilege SA (to change trigger's SA)
-resource "google_service_account_iam_member" "privesc43_actas" {
-  count = var.enable_privesc43 ? 1 : 0
+resource "google_service_account_iam_member" "privesc42_actas" {
+  count = var.enable_privesc42 ? 1 : 0
 
   service_account_id = google_service_account.high_priv.name
   role               = "roles/iam.serviceAccountUser"
-  member             = "serviceAccount:${google_service_account.privesc43_eventarc_update[0].email}"
+  member             = "serviceAccount:${google_service_account.privesc42_eventarc_update[0].email}"
 }
 
 # Allow the attacker to impersonate this service account
-resource "google_service_account_iam_member" "privesc43_impersonate" {
-  count = var.enable_privesc43 ? 1 : 0
+resource "google_service_account_iam_member" "privesc42_impersonate" {
+  count = var.enable_privesc42 ? 1 : 0
 
-  service_account_id = google_service_account.privesc43_eventarc_update[0].name
+  service_account_id = google_service_account.privesc42_eventarc_update[0].name
   role               = "roles/iam.serviceAccountTokenCreator"
   member             = var.attacker_member
 }

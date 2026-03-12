@@ -1,4 +1,4 @@
-# GCP Cloud Scheduler Module - Target Job for Privesc26
+# GCP Cloud Scheduler Module - Target Job for Privesc25
 #
 # This module creates a Cloud Scheduler job that can be hijacked via
 # cloudscheduler.jobs.update for privilege escalation.
@@ -11,9 +11,9 @@
 
 # Target scheduler job that can be hijacked
 # This job runs with no service account initially - attacker will update it to use high-priv SA
-resource "google_cloud_scheduler_job" "privesc26_target_job" {
-  name        = "${var.resource_prefix}26-target-job"
-  description = "Target job for privesc26 - hijack via cloudscheduler.jobs.update"
+resource "google_cloud_scheduler_job" "privesc25_target_job" {
+  name        = "${var.resource_prefix}25-target-job"
+  description = "Target job for privesc25 - hijack via cloudscheduler.jobs.update"
   region      = var.region
   project     = var.project_id
   schedule    = "0 0 1 1 *" # Once a year (Jan 1 at midnight) - not intended to run automatically
@@ -38,8 +38,8 @@ resource "google_cloud_scheduler_job" "privesc26_target_job" {
 # =============================================================================
 
 output "target_job_name" {
-  description = "Name of the target Cloud Scheduler job for privesc26"
-  value       = google_cloud_scheduler_job.privesc26_target_job.name
+  description = "Name of the target Cloud Scheduler job for privesc25"
+  value       = google_cloud_scheduler_job.privesc25_target_job.name
 }
 
 output "target_job_region" {

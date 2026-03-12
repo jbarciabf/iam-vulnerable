@@ -1,4 +1,4 @@
-# Privesc Path 23b: Cloud Build Triggers Create
+# Privesc Path 22b: Cloud Build Triggers Create
 #
 # VULNERABILITY: A service account with cloudbuild.builds.create via trigger
 # can create build triggers that execute builds with elevated privileges
@@ -15,9 +15,9 @@
 #
 # REAL-WORLD IMPACT: Critical - Persistent build access as privileged SA
 
-resource "google_service_account" "privesc23b_triggers" {
-  account_id   = "${var.resource_prefix}23b-triggers"
-  display_name = "Privesc23b - cloudbuild.triggers.create"
+resource "google_service_account" "privesc22b_triggers" {
+  account_id   = "${var.resource_prefix}22b-triggers"
+  display_name = "Privesc22b - cloudbuild.triggers.create"
   description  = "Can escalate via cloudbuild.builds.create through triggers"
   project      = var.project_id
 
@@ -25,9 +25,9 @@ resource "google_service_account" "privesc23b_triggers" {
 }
 
 # Create a custom role with build trigger permissions
-resource "google_project_iam_custom_role" "privesc23b_triggers" {
-  role_id     = "${var.resource_prefix}_23b_triggers"
-  title       = "Privesc23b Build Trigger Creator"
+resource "google_project_iam_custom_role" "privesc22b_triggers" {
+  role_id     = "${var.resource_prefix}_22b_triggers"
+  title       = "Privesc22b Build Trigger Creator"
   description = "Can create Cloud Build triggers"
   project     = var.project_id
 
@@ -41,22 +41,22 @@ resource "google_project_iam_custom_role" "privesc23b_triggers" {
 }
 
 # Grant the custom role at project level
-resource "google_project_iam_member" "privesc23b_triggers" {
+resource "google_project_iam_member" "privesc22b_triggers" {
   project = var.project_id
-  role    = google_project_iam_custom_role.privesc23b_triggers.id
-  member  = "serviceAccount:${google_service_account.privesc23b_triggers.email}"
+  role    = google_project_iam_custom_role.privesc22b_triggers.id
+  member  = "serviceAccount:${google_service_account.privesc22b_triggers.email}"
 }
 
 # Grant actAs on the high-privilege SA
-resource "google_service_account_iam_member" "privesc23b_actas" {
+resource "google_service_account_iam_member" "privesc22b_actas" {
   service_account_id = google_service_account.high_priv.name
   role               = "roles/iam.serviceAccountUser"
-  member             = "serviceAccount:${google_service_account.privesc23b_triggers.email}"
+  member             = "serviceAccount:${google_service_account.privesc22b_triggers.email}"
 }
 
 # Allow the attacker to impersonate this service account
-resource "google_service_account_iam_member" "privesc23b_impersonate" {
-  service_account_id = google_service_account.privesc23b_triggers.name
+resource "google_service_account_iam_member" "privesc22b_impersonate" {
+  service_account_id = google_service_account.privesc22b_triggers.name
   role               = "roles/iam.serviceAccountTokenCreator"
   member             = var.attacker_member
 }

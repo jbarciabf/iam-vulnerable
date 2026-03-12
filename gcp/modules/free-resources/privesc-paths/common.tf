@@ -9,18 +9,18 @@
 # We create batches with delays to avoid hitting this limit.
 # Each privesc path depends on a batch delay to serialize creation.
 #
-# Batch Schedule (48 privesc scenarios + 3 common SAs = 51 SAs total):
+# Batch Schedule (46 privesc scenarios + 3 common SAs = 49 SAs total):
 #   batch1: high_priv, medium_priv, iam_viewer (3 SAs)
 #   batch2: privesc1-5 (5 SAs) - IAM Service Account part 1
 #   batch3: privesc6-9 (4 SAs) - IAM Service Account part 2
-#   batch4: privesc10-14, lateral7, privesc16-17 (8 SAs) - Compute + Cloud Functions
-#   batch5: privesc18-22 (5 SAs) - Cloud Run + Cloud Build
-#   batch6: privesc23-27 (5 SAs) - Storage + Secret Manager + Pub/Sub
-#   batch7: privesc28-32 (5 SAs) - Scheduler + Deploy Mgr + Composer + Dataflow Create + Dataflow Update
-#   batch8: privesc33-37 (5 SAs) - Dataproc Clusters + Dataproc Jobs + GKE + Vertex AI
-#   batch9: privesc38-41 (up to 4 SAs) - Notebooks Update + AI Platform + Workflows Create + Workflows Update
-#   batch10: privesc42-46 (up to 5 SAs) - Eventarc Create + Eventarc Update + Workload Identity Create + Workload Identity Update + Org Policy
-#   batch11: privesc47 (2 SAs) - Deny Bypass
+#   batch4: privesc10-14, lateral7, privesc15-16 (8 SAs) - Compute + Cloud Functions
+#   batch5: privesc17-21 (5 SAs) - Cloud Run + Cloud Build
+#   batch6: privesc22-26 (5 SAs) - Storage + Secret Manager + Pub/Sub
+#   batch7: privesc27-31 (5 SAs) - Scheduler + Deploy Mgr + Composer + Dataflow Create + Dataflow Update
+#   batch8: privesc32-36 (5 SAs) - Dataproc Clusters + Dataproc Jobs + GKE + Vertex AI
+#   batch9: privesc37-40 (up to 4 SAs) - Notebooks Update + AI Platform + Workflows Create + Workflows Update
+#   batch10: privesc41-45 (up to 5 SAs) - Eventarc Create + Eventarc Update + Workload Identity Create + Workload Identity Update + Org Policy
+#   batch11: privesc46 (2 SAs) - Deny Bypass
 
 resource "time_sleep" "batch1_delay" {
   create_duration = "0s" # First batch starts immediately
@@ -322,7 +322,7 @@ resource "google_project_service" "orgpolicy" {
 # Grants the attacker identity project-level permissions to SSH into any
 # compute instance. This separates "SSH access" from "privilege escalation"
 # so privesc paths only need the vulnerable permissions, not SSH plumbing.
-# Used as the completion step for compute-based paths (10, 15, 16b, 16c).
+# Used as the completion step for compute-based paths (10, 15, 15b, 15c).
 
 resource "google_project_iam_custom_role" "ssh_user" {
   role_id     = "${var.resource_prefix}_ssh_user"
@@ -346,12 +346,30 @@ resource "google_project_iam_member" "ssh_user" {
 }
 
 # =============================================================================
+# SHARED CUSTOM ROLE: actAs only (no extra permissions)
+# =============================================================================
+# Many privesc paths need iam.serviceAccounts.actAs on a specific SA.
+# Using roles/iam.serviceAccountUser adds unnecessary permissions (get, list).
+# This custom role + IAM conditions scopes actAs to only the target SA.
+
+resource "google_project_iam_custom_role" "actas_only" {
+  role_id     = "${var.resource_prefix}_actAs_only"
+  title       = "actAs Only"
+  description = "Grants only iam.serviceAccounts.actAs - use with IAM conditions to scope to specific SAs"
+  project     = var.project_id
+
+  permissions = [
+    "iam.serviceAccounts.actAs",
+  ]
+}
+
+# =============================================================================
 # TARGET RESOURCES FOR RESOURCE-LEVEL PRIVESC PATHS
 # =============================================================================
 # These resources are targets for privesc paths that use resource-level IAM.
 # Creating specific targets prevents alternative attack paths.
 
-# Target bucket for privesc23 (bucket setIamPolicy) and privesc24 (storage write)
+# Target bucket for privesc22 (bucket setIamPolicy) and privesc23 (storage write)
 resource "google_storage_bucket" "target_bucket" {
   name          = "${var.project_id}-${var.resource_prefix}-target"
   project       = var.project_id
@@ -363,7 +381,7 @@ resource "google_storage_bucket" "target_bucket" {
   depends_on = [google_project_service.storage]
 }
 
-# Target secret for privesc25 (secret access) and privesc26 (secret setIamPolicy)
+# Target secret for privesc24 (secret access) and privesc25 (secret setIamPolicy)
 resource "google_secret_manager_secret" "target_secret" {
   secret_id = "${var.resource_prefix}-target-secret"
   project   = var.project_id
@@ -381,7 +399,7 @@ resource "google_secret_manager_secret_version" "target_secret_version" {
   secret_data = "SENSITIVE_API_KEY_12345"
 }
 
-# Target Pub/Sub topic for privesc27 (pubsub setIamPolicy)
+# Target Pub/Sub topic for privesc26 (pubsub setIamPolicy)
 resource "google_pubsub_topic" "target_topic" {
   name    = "${var.resource_prefix}-target-topic"
   project = var.project_id
@@ -389,14 +407,14 @@ resource "google_pubsub_topic" "target_topic" {
   depends_on = [google_project_service.pubsub]
 }
 
-# Target Pub/Sub subscription for privesc27
+# Target Pub/Sub subscription for privesc26
 resource "google_pubsub_subscription" "target_subscription" {
   name    = "${var.resource_prefix}-target-sub"
   project = var.project_id
   topic   = google_pubsub_topic.target_topic.id
 }
 
-# Target BigQuery dataset for privesc40 (bigquery setIamPolicy)
+# Target BigQuery dataset for privesc39 (bigquery setIamPolicy)
 resource "google_bigquery_dataset" "target_dataset" {
   dataset_id = replace("${var.resource_prefix}_target_dataset", "-", "_")
   project    = var.project_id

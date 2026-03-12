@@ -1,4 +1,4 @@
-# Privesc Path 36: GKE Get Credentials
+# Privesc Path 35: GKE Get Credentials
 #
 # VULNERABILITY: A service account with container.clusters.getCredentials
 # can obtain kubeconfig credentials to access GKE clusters, potentially
@@ -15,9 +15,9 @@
 #
 # REAL-WORLD IMPACT: High - Access to Kubernetes cluster and its secrets
 
-resource "google_service_account" "privesc36_gke_creds" {
-  account_id   = "${var.resource_prefix}36-gke-creds"
-  display_name = "Privesc36 - container.clusters.getCredentials"
+resource "google_service_account" "privesc35_gke_creds" {
+  account_id   = "${var.resource_prefix}35-gke-creds"
+  display_name = "Privesc35 - container.clusters.getCredentials"
   description  = "Can escalate via GKE cluster credential access"
   project      = var.project_id
 
@@ -25,9 +25,9 @@ resource "google_service_account" "privesc36_gke_creds" {
 }
 
 # Create a custom role with GKE credential permissions
-resource "google_project_iam_custom_role" "privesc36_gke_creds" {
-  role_id     = "${var.resource_prefix}_36_gke_creds"
-  title       = "Privesc36 GKE Credential Viewer"
+resource "google_project_iam_custom_role" "privesc35_gke_creds" {
+  role_id     = "${var.resource_prefix}_35_gke_creds"
+  title       = "Privesc35 GKE Credential Viewer"
   description = "Can get credentials for GKE clusters"
   project     = var.project_id
 
@@ -39,15 +39,15 @@ resource "google_project_iam_custom_role" "privesc36_gke_creds" {
 }
 
 # Grant the custom role at project level
-resource "google_project_iam_member" "privesc36_gke_creds" {
+resource "google_project_iam_member" "privesc35_gke_creds" {
   project = var.project_id
-  role    = google_project_iam_custom_role.privesc36_gke_creds.id
-  member  = "serviceAccount:${google_service_account.privesc36_gke_creds.email}"
+  role    = google_project_iam_custom_role.privesc35_gke_creds.id
+  member  = "serviceAccount:${google_service_account.privesc35_gke_creds.email}"
 }
 
 # Allow the attacker to impersonate this service account
-resource "google_service_account_iam_member" "privesc36_impersonate" {
-  service_account_id = google_service_account.privesc36_gke_creds.name
+resource "google_service_account_iam_member" "privesc35_impersonate" {
+  service_account_id = google_service_account.privesc35_gke_creds.name
   role               = "roles/iam.serviceAccountTokenCreator"
   member             = var.attacker_member
 }

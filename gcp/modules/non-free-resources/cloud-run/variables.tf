@@ -26,6 +26,12 @@ variable "resource_prefix" {
   default     = "privesc"
 }
 
+variable "privesc18_sa_email" {
+  description = "Email of privesc18 SA (for Artifact Registry access)"
+  type        = string
+  default     = null
+}
+
 variable "privesc19_sa_email" {
   description = "Email of privesc19 SA (for Artifact Registry access)"
   type        = string
@@ -44,19 +50,13 @@ variable "privesc21_sa_email" {
   default     = null
 }
 
-variable "privesc22_sa_email" {
-  description = "Email of privesc22 SA (for Artifact Registry access)"
-  type        = string
-  default     = null
-}
-
-variable "enable_privesc20" {
+variable "enable_privesc19" {
   description = "Whether to create the target service for path 20 (run.services.update)"
   type        = bool
   default     = false
 }
 
-variable "enable_privesc22" {
+variable "enable_privesc21" {
   description = "Whether to create the target job for path 22 (run.jobs.update)"
   type        = bool
   default     = false

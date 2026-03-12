@@ -1,4 +1,4 @@
-# GCP Dataflow Module - Target Streaming Job for Privesc32
+# GCP Dataflow Module - Target Streaming Job for Privesc31
 #
 # This module creates a streaming Dataflow job running with a high-privilege
 # service account. The job can be hijacked via dataflow.jobs.updateContents
@@ -17,7 +17,7 @@
 # =============================================================================
 
 resource "google_storage_bucket" "dataflow_staging" {
-  name          = "${var.project_id}-${var.resource_prefix}32-dataflow-staging"
+  name          = "${var.project_id}-${var.resource_prefix}31-dataflow-staging"
   project       = var.project_id
   location      = "US"
   force_destroy = true
@@ -29,8 +29,8 @@ resource "google_storage_bucket" "dataflow_staging" {
 # TARGET INFRASTRUCTURE: Streaming Dataflow job to hijack
 # =============================================================================
 
-resource "google_dataflow_job" "privesc32_target" {
-  name              = "${var.resource_prefix}32-target-streaming"
+resource "google_dataflow_job" "privesc31_target" {
+  name              = "${var.resource_prefix}31-target-streaming"
   project           = var.project_id
   region            = var.region
   template_gcs_path = "gs://dataflow-templates/latest/PubSub_to_BigQuery"
@@ -60,13 +60,13 @@ resource "google_dataflow_job" "privesc32_target" {
 # =============================================================================
 
 output "target_job_name" {
-  description = "Name of the target streaming Dataflow job for privesc32"
-  value       = google_dataflow_job.privesc32_target.name
+  description = "Name of the target streaming Dataflow job for privesc31"
+  value       = google_dataflow_job.privesc31_target.name
 }
 
 output "target_job_id" {
   description = "ID of the target streaming Dataflow job"
-  value       = google_dataflow_job.privesc32_target.job_id
+  value       = google_dataflow_job.privesc31_target.job_id
 }
 
 output "staging_bucket" {

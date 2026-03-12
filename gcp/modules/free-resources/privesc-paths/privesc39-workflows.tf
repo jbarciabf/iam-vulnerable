@@ -1,4 +1,4 @@
-# Privesc Path 40: Cloud Workflows with Privileged SA
+# Privesc Path 39: Cloud Workflows with Privileged SA
 #
 # VULNERABILITY: A user with workflows.workflows.create and actAs can create
 # Cloud Workflows that execute with a high-privilege service account.
@@ -13,9 +13,9 @@
 #
 # REAL-WORLD IMPACT: Critical - Automated execution as privileged SA
 
-resource "google_service_account" "privesc40_workflows" {
-  account_id   = "${var.resource_prefix}40-workflows"
-  display_name = "Privesc40 - Cloud Workflows"
+resource "google_service_account" "privesc39_workflows" {
+  account_id   = "${var.resource_prefix}39-workflows"
+  display_name = "Privesc39 - Cloud Workflows"
   description  = "Can escalate via workflows.workflows.create"
   project      = var.project_id
 
@@ -23,9 +23,9 @@ resource "google_service_account" "privesc40_workflows" {
 }
 
 # Create a custom role with Workflows permissions
-resource "google_project_iam_custom_role" "privesc40_workflows" {
-  role_id     = "${var.resource_prefix}_40_workflows"
-  title       = "Privesc40 Workflow Creator"
+resource "google_project_iam_custom_role" "privesc39_workflows" {
+  role_id     = "${var.resource_prefix}_39_workflows"
+  title       = "Privesc39 Workflow Creator"
   description = "Can create Cloud Workflows"
   project     = var.project_id
 
@@ -40,22 +40,22 @@ resource "google_project_iam_custom_role" "privesc40_workflows" {
 }
 
 # Grant the custom role at project level
-resource "google_project_iam_member" "privesc40_workflows" {
+resource "google_project_iam_member" "privesc39_workflows" {
   project = var.project_id
-  role    = google_project_iam_custom_role.privesc40_workflows.id
-  member  = "serviceAccount:${google_service_account.privesc40_workflows.email}"
+  role    = google_project_iam_custom_role.privesc39_workflows.id
+  member  = "serviceAccount:${google_service_account.privesc39_workflows.email}"
 }
 
 # Grant actAs on the high-privilege SA
-resource "google_service_account_iam_member" "privesc40_actas" {
+resource "google_service_account_iam_member" "privesc39_actas" {
   service_account_id = google_service_account.high_priv.name
   role               = "roles/iam.serviceAccountUser"
-  member             = "serviceAccount:${google_service_account.privesc40_workflows.email}"
+  member             = "serviceAccount:${google_service_account.privesc39_workflows.email}"
 }
 
 # Allow the attacker to impersonate this service account
-resource "google_service_account_iam_member" "privesc40_impersonate" {
-  service_account_id = google_service_account.privesc40_workflows.name
+resource "google_service_account_iam_member" "privesc39_impersonate" {
+  service_account_id = google_service_account.privesc39_workflows.name
   role               = "roles/iam.serviceAccountTokenCreator"
   member             = var.attacker_member
 }

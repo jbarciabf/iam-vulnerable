@@ -1,4 +1,4 @@
-# Privesc Path 27: Deployment Manager
+# Privesc Path 26: Deployment Manager
 #
 # VULNERABILITY: A service account with deploymentmanager.deployments.create and
 # actAs can deploy resources that run with a high-priv SA.
@@ -25,9 +25,9 @@
 #     - deploymentmanager.operations.get (to monitor deployment)
 #     - deploymentmanager.manifests.get (to view deployment details)
 
-resource "google_service_account" "privesc27_deployment_manager" {
-  account_id   = "${var.resource_prefix}27-deployment-manager"
-  display_name = "Privesc27 - Deployment Manager"
+resource "google_service_account" "privesc26_deployment_manager" {
+  account_id   = "${var.resource_prefix}26-deployment-manager"
+  display_name = "Privesc26 - Deployment Manager"
   description  = "Can escalate via Deployment Manager"
   project      = var.project_id
 
@@ -35,9 +35,9 @@ resource "google_service_account" "privesc27_deployment_manager" {
 }
 
 # Custom role with minimal Deployment Manager permissions
-resource "google_project_iam_custom_role" "privesc27_deployment" {
-  role_id     = "${var.resource_prefix}_27_deploymentmanager"
-  title       = "Privesc27 - Deployment Manager Deploy"
+resource "google_project_iam_custom_role" "privesc26_deployment" {
+  role_id     = "${var.resource_prefix}_26_deploymentmanager"
+  title       = "Privesc26 - Deployment Manager Deploy"
   description = "Minimal permissions for Deployment Manager with SA"
   project     = var.project_id
 
@@ -60,22 +60,22 @@ resource "google_project_iam_custom_role" "privesc27_deployment" {
 }
 
 # Grant Deployment Manager permissions
-resource "google_project_iam_member" "privesc27_deployment" {
+resource "google_project_iam_member" "privesc26_deployment" {
   project = var.project_id
-  role    = google_project_iam_custom_role.privesc27_deployment.id
-  member  = "serviceAccount:${google_service_account.privesc27_deployment_manager.email}"
+  role    = google_project_iam_custom_role.privesc26_deployment.id
+  member  = "serviceAccount:${google_service_account.privesc26_deployment_manager.email}"
 }
 
 # Grant actAs on the high-privilege service account
-resource "google_service_account_iam_member" "privesc27_actas" {
+resource "google_service_account_iam_member" "privesc26_actas" {
   service_account_id = google_service_account.high_priv.name
   role               = "roles/iam.serviceAccountUser"
-  member             = "serviceAccount:${google_service_account.privesc27_deployment_manager.email}"
+  member             = "serviceAccount:${google_service_account.privesc26_deployment_manager.email}"
 }
 
 # Allow the attacker to impersonate this service account
-resource "google_service_account_iam_member" "privesc27_impersonate" {
-  service_account_id = google_service_account.privesc27_deployment_manager.name
+resource "google_service_account_iam_member" "privesc26_impersonate" {
+  service_account_id = google_service_account.privesc26_deployment_manager.name
   role               = "roles/iam.serviceAccountTokenCreator"
   member             = var.attacker_member
 }

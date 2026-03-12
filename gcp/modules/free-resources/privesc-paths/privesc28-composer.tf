@@ -1,4 +1,4 @@
-# Privesc Path 29: Cloud Composer (Airflow) Environment
+# Privesc Path 28: Cloud Composer (Airflow) Environment
 #
 # VULNERABILITY: A service account with composer.environments.create, actAs,
 # and storage write permissions can create Composer environments running with
@@ -23,9 +23,9 @@
 #
 # COST: ~$300/month (Composer environments are expensive)
 
-resource "google_service_account" "privesc29_composer" {
-  account_id   = "${var.resource_prefix}29-composer"
-  display_name = "Privesc29 - Cloud Composer"
+resource "google_service_account" "privesc28_composer" {
+  account_id   = "${var.resource_prefix}28-composer"
+  display_name = "Privesc28 - Cloud Composer"
   description  = "Can escalate via Cloud Composer environment"
   project      = var.project_id
 
@@ -33,9 +33,9 @@ resource "google_service_account" "privesc29_composer" {
 }
 
 # Custom role with Composer permissions + Storage write for DAG uploads
-resource "google_project_iam_custom_role" "privesc29_composer" {
-  role_id     = "${var.resource_prefix}_29_composer"
-  title       = "Privesc29 - Cloud Composer"
+resource "google_project_iam_custom_role" "privesc28_composer" {
+  role_id     = "${var.resource_prefix}_28_composer"
+  title       = "Privesc28 - Cloud Composer"
   description = "Vulnerable: Can create Composer environments and upload DAGs"
   permissions = [
     # Composer permissions
@@ -54,22 +54,22 @@ resource "google_project_iam_custom_role" "privesc29_composer" {
 }
 
 # Assign the role
-resource "google_project_iam_member" "privesc29_role" {
+resource "google_project_iam_member" "privesc28_role" {
   project = var.project_id
-  role    = google_project_iam_custom_role.privesc29_composer.id
-  member  = "serviceAccount:${google_service_account.privesc29_composer.email}"
+  role    = google_project_iam_custom_role.privesc28_composer.id
+  member  = "serviceAccount:${google_service_account.privesc28_composer.email}"
 }
 
 # Grant actAs on the high-privilege service account
-resource "google_service_account_iam_member" "privesc29_actas" {
+resource "google_service_account_iam_member" "privesc28_actas" {
   service_account_id = google_service_account.high_priv.name
   role               = "roles/iam.serviceAccountUser"
-  member             = "serviceAccount:${google_service_account.privesc29_composer.email}"
+  member             = "serviceAccount:${google_service_account.privesc28_composer.email}"
 }
 
 # Allow the attacker to impersonate this service account
-resource "google_service_account_iam_member" "privesc29_impersonate" {
-  service_account_id = google_service_account.privesc29_composer.name
+resource "google_service_account_iam_member" "privesc28_impersonate" {
+  service_account_id = google_service_account.privesc28_composer.name
   role               = "roles/iam.serviceAccountTokenCreator"
   member             = var.attacker_member
 }

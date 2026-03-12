@@ -50,7 +50,7 @@ output "summary" {
       ${module.privesc-paths.iam_viewer_service_account_email}
 
     Modules Enabled:
-      - privesc-paths:    Yes (33 enabled + 18 disabled by default)
+      - privesc-paths:    Yes (32 enabled + 18 disabled by default)
       - tool-testing:     ${var.enable_tool_testing ? "Yes (7 tests)" : "Disabled"}
 
     Disabled Privesc Paths (enable individually):
@@ -59,20 +59,20 @@ output "summary" {
       - privesc13 (osLogin):              ${var.enable_privesc13 ? "Enabled" : "Disabled"}
       - privesc14 (setServiceAccount):    ${var.enable_privesc14 ? "Enabled" : "Disabled"}
       - lateral7  (existingSSH):          ${var.enable_lateral7 ? "Enabled" : "Disabled"}
-      - privesc18 (updateFunction):       ${var.enable_privesc18 ? "Enabled" : "Disabled"}
-      - privesc19 (run.services.create):  ${var.enable_privesc19 ? "Enabled" : "Disabled"}
-      - privesc20 (run.services.update):  ${var.enable_privesc20 ? "Enabled" : "Disabled"}
-      - privesc21 (run.jobs.create):      ${var.enable_privesc21 ? "Enabled" : "Disabled"}
-      - privesc22 (run.jobs.update):      ${var.enable_privesc22 ? "Enabled" : "Disabled"}
-      - privesc26 (scheduler.jobs.update): ${var.enable_privesc26 ? "Enabled" : "Disabled"}
-      - privesc28 (dm.deployments.update): ${var.enable_privesc28 ? "Enabled" : "Disabled"}
-      - privesc30 (composer.update ~$400/mo!): ${var.enable_privesc30 ? "Enabled" : "Disabled"}
-      - privesc32 (dataflow.update):     ${var.enable_privesc32 ? "Enabled" : "Disabled"}
-      - privesc38 (notebooks.update):   ${var.enable_privesc38 ? "Enabled" : "Disabled"}
-      - privesc41 (workflows.update):   ${var.enable_privesc41 ? "Enabled" : "Disabled"}
-      - privesc43 (eventarc.update):    ${var.enable_privesc43 ? "Enabled" : "Disabled"}
-      - privesc45 (workloadId.update):  ${var.enable_privesc45 ? "Enabled" : "Disabled"}
-      - privesc46 (orgpolicy.policy.set): ${var.enable_privesc46 ? "Enabled" : "Disabled"}
+      - privesc17 (updateFunction):       ${var.enable_privesc17 ? "Enabled" : "Disabled"}
+      - privesc18 (run.services.create):  ${var.enable_privesc18 ? "Enabled" : "Disabled"}
+      - privesc19 (run.services.update):  ${var.enable_privesc19 ? "Enabled" : "Disabled"}
+      - privesc20 (run.jobs.create):      ${var.enable_privesc20 ? "Enabled" : "Disabled"}
+      - privesc21 (run.jobs.update):      ${var.enable_privesc21 ? "Enabled" : "Disabled"}
+      - privesc25 (scheduler.jobs.update): ${var.enable_privesc25 ? "Enabled" : "Disabled"}
+      - privesc27 (dm.deployments.update): ${var.enable_privesc27 ? "Enabled" : "Disabled"}
+      - privesc29 (composer.update ~$400/mo!): ${var.enable_privesc29 ? "Enabled" : "Disabled"}
+      - privesc31 (dataflow.update):     ${var.enable_privesc31 ? "Enabled" : "Disabled"}
+      - privesc37 (notebooks.update):   ${var.enable_privesc37 ? "Enabled" : "Disabled"}
+      - privesc40 (workflows.update):   ${var.enable_privesc40 ? "Enabled" : "Disabled"}
+      - privesc42 (eventarc.update):    ${var.enable_privesc42 ? "Enabled" : "Disabled"}
+      - privesc44 (workloadId.update):  ${var.enable_privesc44 ? "Enabled" : "Disabled"}
+      - privesc45 (orgpolicy.policy.set): ${var.enable_privesc45 ? "Enabled" : "Disabled"}
 
     Privesc08 WIF Pool (for OIDC → access token exchange):
       ${module.privesc-paths.privesc08_wif_pool_name}

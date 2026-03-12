@@ -80,98 +80,98 @@ variable "enable_lateral7" {
   default     = false
 }
 
-# Cloud Functions path (18)
-variable "enable_privesc18" {
-  description = "Privesc18: updateFunction. Creates Cloud Function (free when idle) to demonstrate function update escalation."
+# Cloud Functions path (17)
+variable "enable_privesc17" {
+  description = "Privesc17: updateFunction. Creates Cloud Function (free when idle) to demonstrate function update escalation."
   type        = bool
   default     = false
 }
 
-# Cloud Run paths (19-22)
+# Cloud Run paths (18-21)
 # Cost: < $0.10/month (Cloud Build, Artifact Registry, Cloud Run all have generous free tiers)
+variable "enable_privesc18" {
+  description = "Privesc18: actAs + run.services.create. Creates token-extractor image and Cloud Run infrastructure."
+  type        = bool
+  default     = false
+}
+
 variable "enable_privesc19" {
-  description = "Privesc19: actAs + run.services.create. Creates token-extractor image and Cloud Run infrastructure."
+  description = "Privesc19: run.services.update. Creates target Cloud Run service."
   type        = bool
   default     = false
 }
 
 variable "enable_privesc20" {
-  description = "Privesc20: run.services.update. Creates target Cloud Run service."
+  description = "Privesc20: run.jobs.create. Creates token-extractor image for job deployment."
   type        = bool
   default     = false
 }
 
 variable "enable_privesc21" {
-  description = "Privesc21: run.jobs.create. Creates token-extractor image for job deployment."
+  description = "Privesc21: run.jobs.update. Creates target Cloud Run job."
   type        = bool
   default     = false
 }
 
-variable "enable_privesc22" {
-  description = "Privesc22: run.jobs.update. Creates target Cloud Run job."
+# Cloud Scheduler Update (25)
+variable "enable_privesc25" {
+  description = "Privesc25: cloudscheduler.jobs.update. Creates target scheduler job to hijack."
   type        = bool
   default     = false
 }
 
-# Cloud Scheduler Update (26)
-variable "enable_privesc26" {
-  description = "Privesc26: cloudscheduler.jobs.update. Creates target scheduler job to hijack."
+# Deployment Manager Update (27)
+variable "enable_privesc27" {
+  description = "Privesc27: deploymentmanager.deployments.update. Creates target deployment to hijack (~$0.02/mo for GCS bucket)."
   type        = bool
   default     = false
 }
 
-# Deployment Manager Update (28)
-variable "enable_privesc28" {
-  description = "Privesc28: deploymentmanager.deployments.update. Creates target deployment to hijack (~$0.02/mo for GCS bucket)."
+# Composer Update (29) - EXTREMELY EXPENSIVE (~$400/mo!)
+variable "enable_privesc29" {
+  description = "Privesc29: composer.environments.update. Creates target Composer environment to hijack (~$400/mo! DELETE IMMEDIATELY after testing)."
   type        = bool
   default     = false
 }
 
-# Composer Update (30) - EXTREMELY EXPENSIVE (~$400/mo!)
-variable "enable_privesc30" {
-  description = "Privesc30: composer.environments.update. Creates target Composer environment to hijack (~$400/mo! DELETE IMMEDIATELY after testing)."
+# Dataflow Update (31)
+variable "enable_privesc31" {
+  description = "Privesc31: dataflow.jobs.updateContents. Creates target streaming Dataflow job to hijack (~$0.05-0.10/hr)."
   type        = bool
   default     = false
 }
 
-# Dataflow Update (32)
-variable "enable_privesc32" {
-  description = "Privesc32: dataflow.jobs.updateContents. Creates target streaming Dataflow job to hijack (~$0.05-0.10/hr)."
+# Notebooks Update (37) - needs verification
+variable "enable_privesc37" {
+  description = "Privesc37: notebooks.instances.setIamPolicy. Hijack existing notebook instance."
   type        = bool
   default     = false
 }
 
-# Notebooks Update (38) - needs verification
-variable "enable_privesc38" {
-  description = "Privesc38: notebooks.instances.setIamPolicy. Hijack existing notebook instance."
+# Workflows Update (40) - hijack existing workflow
+variable "enable_privesc40" {
+  description = "Privesc40: workflows.workflows.update. Hijack existing workflow to change SA."
   type        = bool
   default     = false
 }
 
-# Workflows Update (41) - hijack existing workflow
-variable "enable_privesc41" {
-  description = "Privesc41: workflows.workflows.update. Hijack existing workflow to change SA."
+# Eventarc Triggers Update (42) - hijack existing trigger
+variable "enable_privesc42" {
+  description = "Privesc42: eventarc.triggers.update. Hijack existing trigger to change SA."
   type        = bool
   default     = false
 }
 
-# Eventarc Triggers Update (43) - hijack existing trigger
-variable "enable_privesc43" {
-  description = "Privesc43: eventarc.triggers.update. Hijack existing trigger to change SA."
+# Workload Identity Update (44) - hijack existing provider
+variable "enable_privesc44" {
+  description = "Privesc44: iam.workloadIdentityPoolProviders.update. Hijack existing federation provider."
   type        = bool
   default     = false
 }
 
-# Workload Identity Update (45) - hijack existing provider
+# Org Policy (45)
 variable "enable_privesc45" {
-  description = "Privesc45: iam.workloadIdentityPoolProviders.update. Hijack existing federation provider."
-  type        = bool
-  default     = false
-}
-
-# Org Policy (46)
-variable "enable_privesc46" {
-  description = "Privesc46: orgpolicy.policy.set. Requires GCP Organization (set gcp_organization_id)."
+  description = "Privesc45: orgpolicy.policy.set. Requires GCP Organization (set gcp_organization_id)."
   type        = bool
   default     = false
 }

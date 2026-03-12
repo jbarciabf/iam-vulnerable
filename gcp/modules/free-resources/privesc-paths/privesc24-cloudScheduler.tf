@@ -1,4 +1,4 @@
-# Privesc Path 25: Cloud Scheduler Create
+# Privesc Path 24: Cloud Scheduler Create
 #
 # VULNERABILITY: A service account with cloudscheduler.jobs.create and actAs
 # can create scheduled jobs that invoke targets with high-priv SA.
@@ -13,9 +13,9 @@
 #
 # REAL-WORLD IMPACT: High - Scheduled task abuse, token theft
 
-resource "google_service_account" "privesc25_scheduler" {
-  account_id   = "${var.resource_prefix}25-scheduler"
-  display_name = "Privesc25 - Cloud Scheduler Create"
+resource "google_service_account" "privesc24_scheduler" {
+  account_id   = "${var.resource_prefix}24-scheduler"
+  display_name = "Privesc24 - Cloud Scheduler Create"
   description  = "Can escalate via cloudscheduler.jobs.create"
   project      = var.project_id
 
@@ -23,9 +23,9 @@ resource "google_service_account" "privesc25_scheduler" {
 }
 
 # Custom role with Scheduler create permissions
-resource "google_project_iam_custom_role" "privesc25_scheduler" {
-  role_id     = "${var.resource_prefix}_25_scheduler"
-  title       = "Privesc25 - Cloud Scheduler Create"
+resource "google_project_iam_custom_role" "privesc24_scheduler" {
+  role_id     = "${var.resource_prefix}_24_scheduler"
+  title       = "Privesc24 - Cloud Scheduler Create"
   description = "Vulnerable: Can create Cloud Scheduler jobs"
   permissions = [
     "cloudscheduler.jobs.create",
@@ -38,22 +38,22 @@ resource "google_project_iam_custom_role" "privesc25_scheduler" {
 }
 
 # Assign the role
-resource "google_project_iam_member" "privesc25_role" {
+resource "google_project_iam_member" "privesc24_role" {
   project = var.project_id
-  role    = google_project_iam_custom_role.privesc25_scheduler.id
-  member  = "serviceAccount:${google_service_account.privesc25_scheduler.email}"
+  role    = google_project_iam_custom_role.privesc24_scheduler.id
+  member  = "serviceAccount:${google_service_account.privesc24_scheduler.email}"
 }
 
 # Grant actAs on the high-privilege service account
-resource "google_service_account_iam_member" "privesc25_actas" {
+resource "google_service_account_iam_member" "privesc24_actas" {
   service_account_id = google_service_account.high_priv.name
   role               = "roles/iam.serviceAccountUser"
-  member             = "serviceAccount:${google_service_account.privesc25_scheduler.email}"
+  member             = "serviceAccount:${google_service_account.privesc24_scheduler.email}"
 }
 
 # Allow the attacker to impersonate this service account
-resource "google_service_account_iam_member" "privesc25_impersonate" {
-  service_account_id = google_service_account.privesc25_scheduler.name
+resource "google_service_account_iam_member" "privesc24_impersonate" {
+  service_account_id = google_service_account.privesc24_scheduler.name
   role               = "roles/iam.serviceAccountTokenCreator"
   member             = var.attacker_member
 }

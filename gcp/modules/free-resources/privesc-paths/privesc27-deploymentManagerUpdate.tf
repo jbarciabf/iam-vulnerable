@@ -1,4 +1,4 @@
-# Privesc Path 28: Deployment Manager Update (Hijack Existing Deployment)
+# Privesc Path 27: Deployment Manager Update (Hijack Existing Deployment)
 #
 # VULNERABILITY: A service account with deploymentmanager.deployments.update and
 # actAs can modify existing deployments to add resources running with a high-priv SA.
@@ -17,7 +17,7 @@
 #
 # COST: ~$0.02/month (GCS bucket for target deployment)
 #
-# DISABLED BY DEFAULT: Set enable_privesc28 = true to enable
+# DISABLED BY DEFAULT: Set enable_privesc27 = true to enable
 #
 # TARGET INFRASTRUCTURE: Created by modules/non-free-resources/deployment-manager
 #
@@ -29,11 +29,11 @@
 #     - deploymentmanager.deployments.get (to view deployment)
 #     - deploymentmanager.operations.get (to monitor update)
 
-resource "google_service_account" "privesc28_dm_update" {
-  count = var.enable_privesc28 ? 1 : 0
+resource "google_service_account" "privesc27_dm_update" {
+  count = var.enable_privesc27 ? 1 : 0
 
-  account_id   = "${var.resource_prefix}28-dm-update"
-  display_name = "Privesc28 - Deployment Manager Update"
+  account_id   = "${var.resource_prefix}27-dm-update"
+  display_name = "Privesc27 - Deployment Manager Update"
   description  = "Can escalate via deploymentmanager.deployments.update (no create)"
   project      = var.project_id
 
@@ -41,11 +41,11 @@ resource "google_service_account" "privesc28_dm_update" {
 }
 
 # Custom role with UPDATE but NO CREATE
-resource "google_project_iam_custom_role" "privesc28_dm_update" {
-  count = var.enable_privesc28 ? 1 : 0
+resource "google_project_iam_custom_role" "privesc27_dm_update" {
+  count = var.enable_privesc27 ? 1 : 0
 
-  role_id     = "${var.resource_prefix}_28_dm_update"
-  title       = "Privesc28 - Deployment Manager Update Only"
+  role_id     = "${var.resource_prefix}_27_dm_update"
+  title       = "Privesc27 - Deployment Manager Update Only"
   description = "Vulnerable: Can update (but NOT create) Deployment Manager deployments"
   project     = var.project_id
 
@@ -65,28 +65,28 @@ resource "google_project_iam_custom_role" "privesc28_dm_update" {
 }
 
 # Grant the update-only role
-resource "google_project_iam_member" "privesc28_dm_update" {
-  count = var.enable_privesc28 ? 1 : 0
+resource "google_project_iam_member" "privesc27_dm_update" {
+  count = var.enable_privesc27 ? 1 : 0
 
   project = var.project_id
-  role    = google_project_iam_custom_role.privesc28_dm_update[0].id
-  member  = "serviceAccount:${google_service_account.privesc28_dm_update[0].email}"
+  role    = google_project_iam_custom_role.privesc27_dm_update[0].id
+  member  = "serviceAccount:${google_service_account.privesc27_dm_update[0].email}"
 }
 
 # Grant actAs on the high-privilege service account
-resource "google_service_account_iam_member" "privesc28_actas" {
-  count = var.enable_privesc28 ? 1 : 0
+resource "google_service_account_iam_member" "privesc27_actas" {
+  count = var.enable_privesc27 ? 1 : 0
 
   service_account_id = google_service_account.high_priv.name
   role               = "roles/iam.serviceAccountUser"
-  member             = "serviceAccount:${google_service_account.privesc28_dm_update[0].email}"
+  member             = "serviceAccount:${google_service_account.privesc27_dm_update[0].email}"
 }
 
 # Allow the attacker to impersonate this service account
-resource "google_service_account_iam_member" "privesc28_impersonate" {
-  count = var.enable_privesc28 ? 1 : 0
+resource "google_service_account_iam_member" "privesc27_impersonate" {
+  count = var.enable_privesc27 ? 1 : 0
 
-  service_account_id = google_service_account.privesc28_dm_update[0].name
+  service_account_id = google_service_account.privesc27_dm_update[0].name
   role               = "roles/iam.serviceAccountTokenCreator"
   member             = var.attacker_member
 }
